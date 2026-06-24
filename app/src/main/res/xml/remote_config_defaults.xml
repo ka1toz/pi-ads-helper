@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<defaults>
+    <entry><key>gameplay_ad_type</key><value>0</value></entry>
+    <entry><key>show_inter_2</key><value>false</value></entry>
+    <entry><key>banner_type</key><value>0</value></entry>
+    <entry><key>show_reload_ads</key><value>true</value></entry>
+    <entry><key>ads_interval</key><value>5</value></entry>
+    <entry><key>END_GAME_ADS_TYPE</key><value>0</value></entry>
+    <entry><key>show_inter_1</key><value>false</value></entry>
+    <entry><key>resume_ads</key><value>true</value></entry>
+    <entry><key>show_setting_ads</key><value>true</value></entry>
+</defaults>

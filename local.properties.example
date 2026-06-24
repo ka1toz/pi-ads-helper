@@ -1,0 +1,6 @@
+# Copy to local.properties and fill real values before running production-like tests.
+JBASE_ADMOB_APP_ID=ca-app-pub-4667689154549040~9016024516
+JBASE_APPLOVIN_SDK_KEY=
+JBASE_FACEBOOK_APP_ID=
+JBASE_FACEBOOK_CLIENT_TOKEN=
+JBASE_INCLUDE_RESTRICTED_APPLOVIN_ADAPTERS=false
