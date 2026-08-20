@@ -1,0 +1,5 @@
+-keep class com.google.android.gms.ads.** { *; }
+-keep class com.google.ads.mediation.** { *; }
+-keep class com.google.android.ump.** { *; }
+-keep class com.ads.sdk.** { *; }
+-dontwarn com.google.firebase.remoteconfig.**

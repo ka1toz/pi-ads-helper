@@ -19,4 +19,8 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "JBaseAdsKotlinDemo"
+include(":ads-sdk")
+include(":ads-sdk-compose")
+include(":demo-xml")
+include(":demo-compose")
 include(":app")

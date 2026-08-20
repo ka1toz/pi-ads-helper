@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="ads_sdk_banner_view" type="id" />
+    <item name="ads_sdk_banner_refresh" type="id" />
+    <item name="ads_sdk_native_view" type="id" />
+    <item name="ads_sdk_native_ad" type="id" />
+    <item name="ads_sdk_collap_controller" type="id" />
+    <item name="ads_sdk_native_ad_view" type="id" />
+    <item name="nativeAdView" type="id" />
+    <item name="ads_sdk_headline" type="id" />
+    <item name="adHeadline" type="id" />
+    <item name="ad_headline" type="id" />
+    <item name="ads_sdk_body" type="id" />
+    <item name="adBody" type="id" />
+    <item name="ad_body" type="id" />
+    <item name="ads_sdk_cta" type="id" />
+    <item name="adCallToAction" type="id" />
+    <item name="ad_call_to_action" type="id" />
+    <item name="ads_sdk_icon" type="id" />
+    <item name="adIcon" type="id" />
+    <item name="ad_icon" type="id" />
+    <item name="ads_sdk_media" type="id" />
+    <item name="adMedia" type="id" />
+    <item name="ad_media" type="id" />
+    <item name="ads_sdk_advertiser" type="id" />
+    <item name="adAdvertiser" type="id" />
+    <item name="ad_advertiser" type="id" />
+    <item name="ads_sdk_ad_choices" type="id" />
+    <item name="ad_choices_container" type="id" />
+    <item name="ads_sdk_stars" type="id" />
+    <item name="adStarRating" type="id" />
+    <item name="starRatingView" type="id" />
+    <item name="ad_stars" type="id" />
+    <item name="ads_sdk_collapse" type="id" />
+    <item name="ads_sdk_collap_expanded" type="id" />
+    <item name="ads_sdk_collap_collapsed" type="id" />
+</resources>
