@@ -1,0 +1,56 @@
+name: Publish Maven (GitHub Pages)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "adsSdk.version (default: tag without v, or gradle.properties)"
+        required: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-maven
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${GITHUB_REF_NAME}" == v* ]]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish to build/maven-repo
+        run: |
+          ARGS=(publishAdsSdk -x test -x lint --stacktrace)
+          if [ -n "${{ steps.ver.outputs.version }}" ]; then
+            ARGS+=(-PadsSdk.version="${{ steps.ver.outputs.version }}")
+          fi
+          ./gradlew "${ARGS[@]}"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/maven-repo
+      - id: deploy
+        uses: actions/deploy-pages@v4

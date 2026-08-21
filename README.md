@@ -8,8 +8,8 @@ v1 is Google Mobile Ads only. No UnityPlayer, no JBase AAR wrap, no MAX in the d
 
 | Module | Artifact | Role |
 |---|---|---|
-| `:ads-sdk` | `com.yourorg.ads:sdk:1.0.0-SNAPSHOT` | Public API, ViewGroup host |
-| `:ads-sdk-compose` | `com.yourorg.ads:sdk-compose:1.0.0-SNAPSHOT` | `AndroidView` helpers |
+| `:ads-sdk` | `com.pirago.ads-helper:sdk` | Public API, ViewGroup host |
+| `:ads-sdk-compose` | `com.pirago.ads-helper:sdk-compose` | `AndroidView` helpers |
 | `:demo-xml` | — | ViewBinding sample |
 | `:demo-compose` | — | Compose sample |
 | `:app` | — | Legacy JBase reflection demo |
@@ -25,9 +25,16 @@ App `AndroidManifest.xml` (not the library):
 ```
 
 ```kotlin
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
+
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
+        startKoin {
+            androidContext(this@App)
+            modules(appModule)
+        }
         AdsSdk.init(
             this,
             AdsConfig(
@@ -45,7 +52,9 @@ class App : Application() {
 }
 ```
 
-Hilt apps cannot extend `AdsApplication` — call `AdsSdk.init` from `@HiltAndroidApp`.
+SDK là `object`, **không** cần bind Hilt/`@HiltAndroidApp`. App đích dùng **Koin**: gọi `AdsSdk.init` trong `Application.onCreate` (cùng chỗ `startKoin`). Không extend `AdsApplication` nếu `Application` đã bị Koin/`androidContext` chiếm — `AdsSdk.init` là API chính.
+
+Có thể wrap config trong Koin module nếu muốn inject `AdsConfig`, nhưng GMA show API vẫn cần `Activity` từ UI layer, không inject Activity vào SDK.
 
 Placement kill-switches (`is_show_inter_*`, `is_load_native_*`) stay in the **app**. SDK only reads global knobs (interval, open-ads flags, collap reload).
 
@@ -234,8 +243,8 @@ App khác:
 ```kotlin
 repositories { mavenLocal() }
 dependencies {
-    implementation("com.yourorg.ads:sdk:1.0.0-SNAPSHOT")
-    implementation("com.yourorg.ads:sdk-compose:1.0.0-SNAPSHOT") // optional
+    implementation("com.pirago.ads-helper:sdk:1.0.0")
+    implementation("com.pirago.ads-helper:sdk-compose:1.0.0") // optional
 }
 ```
 
@@ -245,37 +254,34 @@ dependencies {
 repositories { maven { url = uri("/path/to/maven-repo") } }
 ```
 
-### 3. Không user/password, không phí — GitHub Pages
+### 3. GitHub Pages (đang dùng)
 
-Repo **public**. Consumer không khai credentials. Publisher không khai user/password trong Gradle — CI dùng `GITHUB_TOKEN` sẵn có.
+Maven public, không credentials:
 
-Một lần trong GitHub: **Settings → Pages → Source = GitHub Actions**.
+- Source + Pages: [github.com/ka1toz/pi-ads-helper](https://github.com/ka1toz/pi-ads-helper)
+- URL Maven: `https://ka1toz.github.io/pi-ads-helper/`
+- Nhánh **source**: làm việc bình thường (`feature/wrap-into-library`, `main`, …)
+- Nhánh **`gh-pages`**: chỉ chứa nội dung `build/maven-repo` (POM + AAR). Không trộn source.
 
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-Workflow `.github/workflows/publish-maven-pages.yml` build AAR và deploy `build/maven-repo` lên Pages. App đích:
+App đích:
 
 ```kotlin
 repositories {
     google()
     mavenCentral()
-    maven { url = uri("https://USER.github.io/REPO/") }
+    maven { url = uri("https://ka1toz.github.io/pi-ads-helper/") }
 }
 dependencies {
-    implementation("com.yourorg.ads:sdk:1.0.0")
-    implementation("com.yourorg.ads:sdk-compose:1.0.0") // optional
+    implementation("com.pirago.ads-helper:sdk:1.0.0")
+    implementation("com.pirago.ads-helper:sdk-compose:1.0.0") // optional
 }
 ```
 
-Nếu không muốn public source: tạo repo **chỉ chứa** `maven-repo` (public), source để private. Local:
+Kiểm tra file đã lên Pages:
 
-```bash
-./gradlew publishAdsSdk
-# copy build/maven-repo → repo public, push
-```
+`https://ka1toz.github.io/pi-ads-helper/com/pirago/ads-helper/sdk/maven-metadata.xml`
+
+Chi tiết bước build/release/update: mục **Build, release, update SDK** bên dưới. Workflow `.github/workflows/publish-maven-pages.yml` là phương án CI (Pages = GitHub Actions); hiện tại release thủ công qua nhánh `gh-pages`.
 
 ### 4. Maven remote có auth (GitHub Packages / Nexus)
 
@@ -294,6 +300,109 @@ Hoặc `ADS_SDK_MAVEN_URL` / `ADS_SDK_MAVEN_USER` / `ADS_SDK_MAVEN_PASSWORD`. R�
 ```
 
 App consumer thêm cùng `repositories { maven { url = ...; credentials { ... } } }`.
+
+## Build, release, update SDK
+
+Mục này để **AI hoặc người** làm theo khi có bản SDK mới. Không đoán version. Không `--force` push. Không xóa version cũ trên `gh-pages`.
+
+### Tọa độ (không đổi trừ khi được yêu cầu)
+
+| | |
+|---|---|
+| Group | `com.pirago.ads-helper` (`adsSdk.group` trong `gradle.properties`) |
+| Artifacts | `sdk`, `sdk-compose` |
+| GitHub | `git@github.com:ka1toz/pi-ads-helper.git` |
+| Maven URL | `https://ka1toz.github.io/pi-ads-helper/` |
+| Nhánh source | nhánh đang làm việc (đừng checkout `gh-pages` trong worktree chính) |
+| Nhánh Maven | `gh-pages` — chỉ file từ `build/maven-repo/` |
+
+App đích: `implementation("com.pirago.ads-helper:sdk:X.Y.Z")` + repo `https://ka1toz.github.io/pi-ads-helper/`.
+
+### Build / test (mọi PR)
+
+Từ root repo:
+
+```bash
+./gradlew :ads-sdk:test :ads-sdk:assembleRelease :ads-sdk-compose:assembleRelease
+```
+
+Demo (không bắt buộc khi release):
+
+```bash
+./gradlew :demo-xml:assembleDebug :demo-compose:assembleDebug
+```
+
+### Release version mới (ví dụ `1.0.1`)
+
+Thay `VERSION` bằng số semver **chưa từng publish**. Patch = fix; minor = API mới tương thích; major = breaking.
+
+1. Sửa `adsSdk.version` trong `gradle.properties` thành `VERSION` (bỏ `-SNAPSHOT` khi phát hành).
+2. Chạy test + publish:
+
+```bash
+VERSION=1.0.1   # đổi số này
+./gradlew :ads-sdk:test
+./gradlew publishAdsSdk -PadsSdk.version="$VERSION"
+```
+
+3. Merge vào nhánh `gh-pages` (**giữ** thư mục version cũ). Dùng clone tạm, không `git checkout gh-pages` trong source tree:
+
+```bash
+VERSION=1.0.1
+MAVEN_DIR=/tmp/pi-ads-helper-maven
+rm -rf "$MAVEN_DIR"
+git clone --branch gh-pages --single-branch git@github.com:ka1toz/pi-ads-helper.git "$MAVEN_DIR"
+rsync -a --exclude '.git' build/maven-repo/ "$MAVEN_DIR/"
+cd "$MAVEN_DIR"
+git add .
+git status   # phải thấy com/pirago/ads-helper/sdk/$VERSION/ ; không được xóa sdk/1.0.0/
+git commit -m "Publish ads-helper $VERSION"
+git push origin gh-pages
+```
+
+Nếu clone `gh-pages` thất bại (chưa có nhánh): lần đầu tạo orphan từ `build/maven-repo` như mục GitHub Pages ở trên, rồi `git push -u origin gh-pages`.
+
+4. Commit source (version trong `gradle.properties`) + tag, đẩy GitHub:
+
+```bash
+VERSION=1.0.1
+git add gradle.properties README.md
+git commit -m "Release ads-helper $VERSION"
+git tag "v$VERSION"
+git push origin HEAD
+git push origin "v$VERSION"
+# nếu remote GitHub tên khác origin:
+# git push github HEAD && git push github "v$VERSION"
+```
+
+5. Đợi ~1 phút, mở:
+
+`https://ka1toz.github.io/pi-ads-helper/com/pirago/ads-helper/sdk/maven-metadata.xml`
+
+Phải thấy `$VERSION`. App đích đổi `implementation` sang version mới rồi sync Gradle.
+
+### Lần đầu tạo `gh-pages` (chỉ khi nhánh chưa tồn tại)
+
+```bash
+./gradlew publishAdsSdk -PadsSdk.version=1.0.0
+cd build/maven-repo
+git init
+git checkout -b gh-pages
+git add .
+git commit -m "Publish ads-helper 1.0.0"
+git remote add origin git@github.com:ka1toz/pi-ads-helper.git
+git push -u origin gh-pages
+```
+
+GitHub → Settings → Pages → **Deploy from a branch** → `gh-pages` / `(root)`.
+
+### Việc AI không được làm
+
+- `git push --force` lên `gh-pages` hoặc `main`
+- Xóa folder version cũ trong `com/pirago/ads-helper/sdk/`
+- Đổi `adsSdk.group` hoặc Maven URL nếu không được hỏi
+- Publish `-SNAPSHOT` lên Pages như bản production
+- Commit `local.properties`, keystore, `google-services.json` production
 
 ## Run samples
 

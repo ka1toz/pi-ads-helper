@@ -3,8 +3,10 @@ package com.ads.sdk
 import android.app.Application
 
 /**
- * Convenience base class for apps that do not use Hilt.
- * Hilt apps should call [AdsSdk.init] from `Application.onCreate` instead.
+ * Optional [Application] base that calls [AdsSdk.init].
+ *
+ * Koin (and Hilt) apps should **not** extend this class — call [AdsSdk.init]
+ * from `Application.onCreate` next to `startKoin` / `@HiltAndroidApp`.
  */
 open class AdsApplication : Application() {
     override fun onCreate() {
