@@ -4,6 +4,8 @@ Android library in this repo: **`:ads-sdk`**. Optional Compose wrappers: **`:ads
 
 v1 is Google Mobile Ads only. No UnityPlayer, no JBase AAR wrap, no MAX in the default artifact.
 
+**App đích (Koin):** copy [SDK_INTEGRATION.md](SDK_INTEGRATION.md) vào chat AI của repo app — Gradle Pages, init, XML/Compose, native custom, RC.
+
 ## Modules
 
 | Module | Artifact | Role |
@@ -93,20 +95,50 @@ AdsSdk.bottom.load(
 )
 ```
 
-Custom native XML must contain a `NativeAdView` (as root, or nested with id `nativeAdView` / `ads_sdk_native_ad_view`) and map GMA assets with these IDs:
+Custom native XML must contain a `NativeAdView` (as root, or nested with id `nativeAdView` / `ads_sdk_native_ad_view` / `native_ad_view`) and map GMA assets with these IDs:
 
-| Asset | SDK id | DIY / Google aliases |
+| Asset | SDK id | DIY / Google / Pirago (Themie) aliases |
 |---|---|---|
-| Headline (required) | `ads_sdk_headline` | `adHeadline`, `ad_headline` |
-| Body | `ads_sdk_body` | `adBody`, `ad_body` |
-| CTA | `ads_sdk_cta` | `adCallToAction`, `ad_call_to_action` |
-| Icon | `ads_sdk_icon` | `adIcon`, `ad_icon` |
-| Media | `ads_sdk_media` | `adMedia`, `ad_media` |
+| Headline (required) | `ads_sdk_headline` | `adHeadline`, `ad_headline`, `native_ad_headline` |
+| Body | `ads_sdk_body` | `adBody`, `ad_body`, `native_ad_body` |
+| CTA | `ads_sdk_cta` | `adCallToAction`, `ad_call_to_action`, `native_ad_call_to_action` (+ nested `native_ad_call_to_action_text` if CTA is `ViewGroup` / `FrameLayout`) |
+| Icon | `ads_sdk_icon` | `adIcon`, `ad_icon`, `native_ad_icon`, `adAppIcon` |
+| Media | `ads_sdk_media` | `adMedia`, `ad_media`, `native_ad_media` |
 | Advertiser | `ads_sdk_advertiser` | `adAdvertiser`, `ad_advertiser` |
 | Stars | `ads_sdk_stars` | `adStarRating`, `ad_stars` |
-| AdChoices | `ads_sdk_ad_choices` | `ad_choices_container` |
+| AdChoices | `ads_sdk_ad_choices` | `ad_choices_container`, `ad_choices_view` |
 
-Layout, colors, fonts, AD badge, close/collapse buttons are **app-owned**. Banner / interstitial / AOA / rewarded UI is Google's — not customizable.
+Optional host chrome after bind: `native_ad_content_root` → `VISIBLE` (kể cả khi XML để `invisible`), `native_loading_root` → `GONE`.
+
+### Pirago / Themie layouts (đã verify)
+
+App có thể truyền thẳng XML sẵn có — **không rename ID**:
+
+| App layout | Gọi SDK |
+|---|---|
+| `layout_native_ad_medium.xml` | `loadAndBind(..., R.layout.layout_native_ad_medium)` |
+| `layout_native_ad_small.xml` | `loadAndBind(..., R.layout.layout_native_ad_small)` |
+| `layout_native_medium_language.xml` | `loadAndBind(..., R.layout.layout_native_medium_language)` |
+| `layout_native_ad_fullscreen.xml` | `loadAndBind(..., R.layout.layout_native_ad_fullscreen)` — asset bind OK (`adAppIcon`, DIY headline). **`btnCloseAd` countdown vẫn app** |
+| `layout_native_ad_collapsible.xml` | Dùng như **expanded content** (`expandedLayoutRes`), **không** thay chrome SDK |
+
+Home bottom / collap — chrome SDK (`ads_native_collapsible`) + XML app cho expanded/collapsed:
+
+```kotlin
+BottomAdConfig(
+    showNativeSmall = true,
+    nativeAdUnitId = id,
+    banner = BannerConfig(bannerId, BannerType.Adaptive),
+    collapsible = true,
+    reloadSec = 15,
+    expandedLayoutRes = R.layout.layout_native_ad_medium,       // hoặc layout_native_ad_collapsible
+    collapsedLayoutRes = R.layout.layout_native_ad_small,
+)
+```
+
+**Không** truyền `layout_native_ad_collapsible` làm toàn bộ chrome — layout đó không có `ads_sdk_collap_expanded` / nút collapse.
+
+App-owned (SDK không port): badge `AD`, blur `adMediaBackground`, `btnCloseAd` countdown, Coil. Banner / interstitial / AOA / rewarded = UI Google — không custom XML.
 
 ## Compose
 

@@ -97,6 +97,16 @@ data class NativeCollapConfig(
     /** DIY `is_show_native_bottom`: collapsed fill is Native Small. False → [collapsedBanner]. */
     val collapsedNativeSmall: Boolean = true,
     val collapsedBanner: BannerConfig? = null,
+    /**
+     * App-owned expanded native XML. `0` = SDK [NativeTemplate.Medium].
+     * Chrome still uses SDK `ads_native_collapsible` (expanded/collapsed slots + collapse button).
+     */
+    @androidx.annotation.LayoutRes val expandedLayoutRes: Int = 0,
+    /**
+     * App-owned collapsed native XML when [collapsedNativeSmall] is true.
+     * `0` = SDK [NativeTemplate.Small].
+     */
+    @androidx.annotation.LayoutRes val collapsedLayoutRes: Int = 0,
 )
 
 data class BottomAdConfig(
@@ -111,6 +121,15 @@ data class BottomAdConfig(
     val collapsible: Boolean = false,
     val reloadSec: Int = 0,
     val expandedUnitId: String = nativeAdUnitId,
+    /** Forwarded to [NativeCollapConfig.expandedLayoutRes] when collapsible. */
+    @androidx.annotation.LayoutRes val expandedLayoutRes: Int = 0,
+    /** Forwarded to [NativeCollapConfig.collapsedLayoutRes] when collapsible. */
+    @androidx.annotation.LayoutRes val collapsedLayoutRes: Int = 0,
+    /**
+     * Static Native Small path only (`collapsible=false`, `showNativeSmall=true`).
+     * `0` = SDK [NativeTemplate.Small].
+     */
+    @androidx.annotation.LayoutRes val nativeLayoutRes: Int = 0,
 )
 
 fun interface RevenueLogger {

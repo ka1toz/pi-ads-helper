@@ -7,6 +7,7 @@ import com.ads.sdk.AdsSdk
 import com.ads.sdk.BannerConfig
 import com.ads.sdk.BannerType
 import com.ads.sdk.BottomAdConfig
+import com.ads.sdk.NativeTemplate
 import com.ads.sdk.TestAdUnits
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,11 +36,14 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             banner = BannerConfig(TestAdUnits.ADAPTIVE_BANNER, BannerType.Adaptive),
             collapsible = true,
             reloadSec = rc.getLong("time_reload_collap_ad", 15L).toInt(),
+            expandedLayoutRes = R.layout.layout_native_ad_pirago_medium,
+            collapsedLayoutRes = R.layout.layout_native_ad_pirago_small,
         )
         _state.update {
             it.copy(
                 showHomeBottom = rc.getBoolean("is_show_banner_home", true),
                 showNative = rc.getBoolean("is_show_native_medium", true),
+                showPirago = rc.getBoolean("is_show_native_pirago", true),
                 homeBottom = homeBottom,
             )
         }

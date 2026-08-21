@@ -7,7 +7,7 @@ import org.gradle.kotlin.dsl.register
 import java.net.URI
 
 val adsGroup = providers.gradleProperty("adsSdk.group").getOrElse("com.pirago.ads-helper")
-val adsVersion = providers.gradleProperty("adsSdk.version").getOrElse("1.0.0")
+val adsVersion = providers.gradleProperty("adsSdk.version").getOrElse("1.0.2")
 val adsScmUrl = providers.gradleProperty("adsSdk.scmUrl")
     .getOrElse("https://github.com/ka1toz/pi-ads-helper")
 val adsArtifact = extra["adsSdk.artifactId"] as String

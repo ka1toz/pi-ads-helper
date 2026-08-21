@@ -50,6 +50,7 @@ data class HomeUiState(
     val resumeEnabled: Boolean = true,
     val showHomeBottom: Boolean = true,
     val showNative: Boolean = true,
+    val showPirago: Boolean = true,
     val homeBottom: BottomAdConfig = BottomAdConfig(
         showNativeSmall = true,
         nativeAdUnitId = TestAdUnits.NATIVE,
@@ -60,6 +61,9 @@ data class HomeUiState(
     val homeBottomPlacement: String = "home_collap",
     val nativeUnitId: String = TestAdUnits.NATIVE,
     val nativeTemplate: NativeTemplate = NativeTemplate.Medium,
+    val piragoMediumLayout: Int = R.layout.layout_native_ad_pirago_medium,
+    val piragoFullscreenLayout: Int = R.layout.layout_native_ad_pirago_fullscreen,
+    val diyCustomLayout: Int = R.layout.layout_native_ad_custom,
 )
 
 @Composable
@@ -69,6 +73,9 @@ fun HomeUi(
     modifier: Modifier = Modifier,
     homeBottomSlot: @Composable () -> Unit = {},
     nativeMediumSlot: @Composable () -> Unit = {},
+    diyCustomSlot: @Composable () -> Unit = {},
+    piragoMediumSlot: @Composable () -> Unit = {},
+    piragoFullscreenSlot: @Composable () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -98,12 +105,20 @@ fun HomeUi(
             Text(if (state.resumeEnabled) "Disable resume ads" else "Enable resume ads")
         }
         if (state.showHomeBottom) {
-            Text("Home bottom (collap ↔ small/banner)", style = MaterialTheme.typography.titleMedium)
+            Text("Home bottom (Pirago medium ↔ small)", style = MaterialTheme.typography.titleMedium)
             homeBottomSlot()
         }
         if (state.showNative) {
-            Text("Native medium", style = MaterialTheme.typography.titleMedium)
+            Text("Native medium (SDK template)", style = MaterialTheme.typography.titleMedium)
             nativeMediumSlot()
+            Text("Native DIY custom (adHeadline)", style = MaterialTheme.typography.titleMedium)
+            diyCustomSlot()
+        }
+        if (state.showPirago) {
+            Text("Native Pirago medium", style = MaterialTheme.typography.titleMedium)
+            piragoMediumSlot()
+            Text("Native Pirago fullscreen (adAppIcon)", style = MaterialTheme.typography.titleMedium)
+            piragoFullscreenSlot()
         }
     }
 }
@@ -131,6 +146,9 @@ private fun HomeUiAdsOnPreview() {
                 onIntent = {},
                 homeBottomSlot = { AdSlotPlaceholder("Home bottom", 200) },
                 nativeMediumSlot = { AdSlotPlaceholder("Native medium", 220) },
+                diyCustomSlot = { AdSlotPlaceholder("DIY custom", 120) },
+                piragoMediumSlot = { AdSlotPlaceholder("Pirago medium", 220) },
+                piragoFullscreenSlot = { AdSlotPlaceholder("Pirago fullscreen", 260) },
             )
         }
     }
@@ -146,6 +164,7 @@ private fun HomeUiAdsOffPreview() {
                     status = "inter skipped by RC",
                     showHomeBottom = false,
                     showNative = false,
+                    showPirago = false,
                 ),
                 onIntent = {},
             )
@@ -163,9 +182,11 @@ private fun HomeUiResumeOffPreview() {
                     status = "inter shown → next",
                     resumeEnabled = false,
                     showHomeBottom = false,
+                    showPirago = false,
                 ),
                 onIntent = {},
                 nativeMediumSlot = { AdSlotPlaceholder("Native medium", 220) },
+                diyCustomSlot = { AdSlotPlaceholder("DIY custom", 120) },
             )
         }
     }

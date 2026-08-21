@@ -55,7 +55,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Home bottom (collap ↔ small/banner)"
+            android:text="Home bottom (Pirago medium ↔ small)"
             android:textStyle="bold" />
 
         <FrameLayout
@@ -69,7 +69,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Native medium"
+            android:text="Native medium (SDK template)"
             android:textStyle="bold" />
 
         <FrameLayout
@@ -83,11 +83,39 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Native custom layout (app XML)"
+            android:text="Native DIY custom (adHeadline)"
             android:textStyle="bold" />
 
         <FrameLayout
             android:id="@+id/nativeCustom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Native Pirago medium (native_ad_* + CTA ViewGroup)"
+            android:textStyle="bold" />
+
+        <FrameLayout
+            android:id="@+id/nativePirago"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Native Pirago fullscreen fixture (adAppIcon)"
+            android:textStyle="bold" />
+
+        <FrameLayout
+            android:id="@+id/nativePiragoFullscreen"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"

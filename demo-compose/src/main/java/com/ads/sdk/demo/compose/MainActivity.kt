@@ -50,6 +50,15 @@ private fun HomeScreen(viewModel: HomeViewModel) {
         nativeMediumSlot = {
             AdsNative(adUnitId = state.nativeUnitId, template = state.nativeTemplate)
         },
+        diyCustomSlot = {
+            AdsNative(adUnitId = state.nativeUnitId, layoutRes = state.diyCustomLayout)
+        },
+        piragoMediumSlot = {
+            AdsNative(adUnitId = state.nativeUnitId, layoutRes = state.piragoMediumLayout)
+        },
+        piragoFullscreenSlot = {
+            AdsNative(adUnitId = state.nativeUnitId, layoutRes = state.piragoFullscreenLayout)
+        },
     )
 }
 

@@ -15,9 +15,8 @@ import com.google.android.gms.ads.nativead.NativeAdView
 /**
  * Maps a host XML layout onto [NativeAdView] asset slots.
  *
- * Canonical IDs are `ads_sdk_*`. Aliases match DIY Wallpaper (`adHeadline`) and
- * Google's native sample (`ad_headline`) so an app can drop in its own layout
- * without renaming every view.
+ * Canonical IDs are `ads_sdk_*`. Aliases: DIY (`adHeadline`), Google sample
+ * (`ad_headline`), Pirago/Themie (`native_ad_*`, `adAppIcon`).
  */
 internal object NativeAssetBinder {
 
@@ -25,6 +24,7 @@ internal object NativeAssetBinder {
         if (root is NativeAdView) return root
         root.findViewById<NativeAdView>(R.id.ads_sdk_native_ad_view)?.let { return it }
         root.findViewById<NativeAdView>(R.id.nativeAdView)?.let { return it }
+        root.findViewById<NativeAdView>(R.id.native_ad_view)?.let { return it }
         if (root is ViewGroup) {
             for (i in 0 until root.childCount) {
                 findNativeAdView(root.getChildAt(i))?.let { return it }
@@ -38,26 +38,32 @@ internal object NativeAssetBinder {
             R.id.ads_sdk_headline,
             R.id.adHeadline,
             R.id.ad_headline,
+            R.id.native_ad_headline,
         )
         val body = adView.findAsset<TextView>(
             R.id.ads_sdk_body,
             R.id.adBody,
             R.id.ad_body,
+            R.id.native_ad_body,
         )
         val cta = adView.findAsset<View>(
             R.id.ads_sdk_cta,
             R.id.adCallToAction,
             R.id.ad_call_to_action,
+            R.id.native_ad_call_to_action,
         )
         val icon = adView.findAsset<ImageView>(
             R.id.ads_sdk_icon,
             R.id.adIcon,
             R.id.ad_icon,
+            R.id.native_ad_icon,
+            R.id.adAppIcon,
         )
         val media = adView.findAsset<MediaView>(
             R.id.ads_sdk_media,
             R.id.adMedia,
             R.id.ad_media,
+            R.id.native_ad_media,
         )
         val advertiser = adView.findAsset<TextView>(
             R.id.ads_sdk_advertiser,
@@ -73,6 +79,7 @@ internal object NativeAssetBinder {
         val choices = adView.findAsset<AdChoicesView>(
             R.id.ads_sdk_ad_choices,
             R.id.ad_choices_container,
+            R.id.ad_choices_view,
         )
 
         adView.headlineView = headline
@@ -93,10 +100,7 @@ internal object NativeAssetBinder {
             text = nativeAd.body
             visibility = if (nativeAd.body.isNullOrBlank()) View.GONE else View.VISIBLE
         }
-        (cta as? TextView)?.apply {
-            text = nativeAd.callToAction
-            visibility = if (nativeAd.callToAction.isNullOrBlank()) View.GONE else View.VISIBLE
-        }
+        applyCallToAction(cta, nativeAd.callToAction)
         val iconDrawable = nativeAd.icon?.drawable
         if (iconDrawable != null) {
             icon?.setImageDrawable(iconDrawable)
@@ -126,6 +130,46 @@ internal object NativeAssetBinder {
                 media.visibility = View.GONE
             }
         }
+        revealHostChrome(adView)
+    }
+
+    private fun applyCallToAction(cta: View?, text: String?) {
+        if (cta == null) return
+        val visible = if (text.isNullOrBlank()) View.GONE else View.VISIBLE
+        when (cta) {
+            is TextView -> {
+                cta.text = text
+                cta.visibility = visible
+            }
+            is ViewGroup -> {
+                val label = cta.findAsset<TextView>(
+                    R.id.native_ad_call_to_action_text,
+                    R.id.ads_sdk_cta,
+                ) ?: firstTextView(cta)
+                label?.text = text
+                cta.visibility = visible
+            }
+        }
+    }
+
+    private fun revealHostChrome(start: View) {
+        var node: View? = start
+        repeat(8) {
+            val current = node ?: return
+            current.findViewById<View>(R.id.native_ad_content_root)?.visibility = View.VISIBLE
+            current.findViewById<View>(R.id.native_loading_root)?.visibility = View.GONE
+            node = current.parent as? View
+        }
+    }
+
+    private fun firstTextView(group: ViewGroup): TextView? {
+        for (i in 0 until group.childCount) {
+            when (val child = group.getChildAt(i)) {
+                is TextView -> return child
+                is ViewGroup -> firstTextView(child)?.let { return it }
+            }
+        }
+        return null
     }
 
     private inline fun <reified T : View> View.findAsset(vararg ids: Int): T? {

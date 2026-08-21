@@ -56,7 +56,7 @@ internal class NativeCollapsibleController(
         fun bindExpanded(ad: NativeAd) {
             expandedAd?.destroy()
             expandedAd = ad
-            nativeAds.bindTemplate(activity, expandedSlot, ad, NativeTemplate.Medium)
+            bindExpandedLayout(activity, expandedSlot, ad, config)
             expandedSlot.visibility = View.VISIBLE
             collapseBtn.visibility = View.VISIBLE
             clearCollapsedFill(collapsedSlot)
@@ -153,7 +153,7 @@ internal class NativeCollapsibleController(
             val preloaded = collapsedPlacement(placement)?.let { nativeAds.takePreloaded(it) }
             if (preloaded != null) {
                 collapsedAd = preloaded
-                nativeAds.bindTemplate(activity, collapsedSlot, preloaded, NativeTemplate.Small)
+                bindCollapsedLayout(activity, collapsedSlot, preloaded, config)
                 return
             }
             nativeAds.load(activity, config.collapsedUnitId, object : NativeAds.NativeLoadCallback {
@@ -164,7 +164,7 @@ internal class NativeCollapsibleController(
                         return
                     }
                     collapsedAd = ad
-                    nativeAds.bindTemplate(activity, collapsedSlot, ad, NativeTemplate.Small)
+                    bindCollapsedLayout(activity, collapsedSlot, ad, config)
                 }
             })
             return
@@ -172,6 +172,32 @@ internal class NativeCollapsibleController(
         val banner = config.collapsedBanner ?: return
         if (collapsedSlot.childCount > 0) return
         AdsSdk.banner.load(activity, collapsedSlot, shimmer = null, banner)
+    }
+
+    private fun bindExpandedLayout(
+        activity: Activity,
+        slot: FrameLayout,
+        ad: NativeAd,
+        config: NativeCollapConfig,
+    ) {
+        if (config.expandedLayoutRes != 0) {
+            nativeAds.bind(activity, config.expandedLayoutRes, slot, ad)
+        } else {
+            nativeAds.bindTemplate(activity, slot, ad, NativeTemplate.Medium)
+        }
+    }
+
+    private fun bindCollapsedLayout(
+        activity: Activity,
+        slot: FrameLayout,
+        ad: NativeAd,
+        config: NativeCollapConfig,
+    ) {
+        if (config.collapsedLayoutRes != 0) {
+            nativeAds.bind(activity, config.collapsedLayoutRes, slot, ad)
+        } else {
+            nativeAds.bindTemplate(activity, slot, ad, NativeTemplate.Small)
+        }
     }
 
     private fun collapsedPlacement(placement: String?): String? {

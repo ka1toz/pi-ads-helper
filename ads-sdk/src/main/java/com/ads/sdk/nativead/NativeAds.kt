@@ -82,7 +82,7 @@ class NativeAds internal constructor() {
         val adView = NativeAssetBinder.findNativeAdView(root)
             ?: error(
                 "Custom native layout must be a NativeAdView or contain one " +
-                    "(id nativeAdView / ads_sdk_native_ad_view)",
+                    "(id nativeAdView / ads_sdk_native_ad_view / native_ad_view)",
             )
         bind(nativeAd, adView)
         container.addView(root)

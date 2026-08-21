@@ -42,6 +42,8 @@ class BottomAds internal constructor() {
                     reloadSec = config.reloadSec,
                     collapsedNativeSmall = config.showNativeSmall,
                     collapsedBanner = config.banner,
+                    expandedLayoutRes = config.expandedLayoutRes,
+                    collapsedLayoutRes = config.collapsedLayoutRes,
                 ),
                 placement = placement,
                 callback = callback,
@@ -49,14 +51,25 @@ class BottomAds internal constructor() {
             return
         }
         if (config.showNativeSmall) {
-            AdsSdk.native.loadAndBind(
-                activity,
-                container,
-                config.nativeAdUnitId,
-                NativeTemplate.Small,
-                shimmer,
-                callback = callback,
-            )
+            if (config.nativeLayoutRes != 0) {
+                AdsSdk.native.loadAndBind(
+                    activity,
+                    container,
+                    config.nativeAdUnitId,
+                    config.nativeLayoutRes,
+                    shimmer,
+                    callback = callback,
+                )
+            } else {
+                AdsSdk.native.loadAndBind(
+                    activity,
+                    container,
+                    config.nativeAdUnitId,
+                    NativeTemplate.Small,
+                    shimmer,
+                    callback = callback,
+                )
+            }
         } else {
             AdsSdk.banner.load(activity, container, shimmer, config.banner, callback)
         }

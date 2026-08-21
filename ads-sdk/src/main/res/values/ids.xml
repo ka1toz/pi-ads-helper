@@ -31,6 +31,18 @@
     <item name="adStarRating" type="id" />
     <item name="starRatingView" type="id" />
     <item name="ad_stars" type="id" />
+    <item name="native_ad_view" type="id" />
+    <item name="native_ad_headline" type="id" />
+    <item name="native_ad_body" type="id" />
+    <item name="native_ad_call_to_action" type="id" />
+    <item name="native_ad_call_to_action_text" type="id" />
+    <item name="native_ad_icon" type="id" />
+    <item name="native_ad_media" type="id" />
+    <item name="ad_choices_view" type="id" />
+    <item name="adAppIcon" type="id" />
+    <item name="native_ad_content_root" type="id" />
+    <item name="native_loading_root" type="id" />
+    <item name="collapsible_slot_top" type="id" />
     <item name="ads_sdk_collapse" type="id" />
     <item name="ads_sdk_collap_expanded" type="id" />
     <item name="ads_sdk_collap_collapsed" type="id" />

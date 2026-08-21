@@ -40,7 +40,21 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.nativeCustom),
             TestAdUnits.NATIVE,
             R.layout.layout_native_ad_custom,
-            callback = logCallback(status, "native-custom"),
+            callback = logCallback(status, "native-diy"),
+        )
+        AdsSdk.native.loadAndBind(
+            this,
+            findViewById(R.id.nativePirago),
+            TestAdUnits.NATIVE,
+            R.layout.layout_native_ad_pirago_medium,
+            callback = logCallback(status, "native-pirago"),
+        )
+        AdsSdk.native.loadAndBind(
+            this,
+            findViewById(R.id.nativePiragoFullscreen),
+            TestAdUnits.NATIVE,
+            R.layout.layout_native_ad_pirago_fullscreen,
+            callback = logCallback(status, "native-pirago-fs"),
         )
 
         findViewById<Button>(R.id.btnInter).setOnClickListener {
@@ -86,6 +100,8 @@ class MainActivity : AppCompatActivity() {
             banner = BannerConfig(TestAdUnits.ADAPTIVE_BANNER, BannerType.Adaptive),
             collapsible = true,
             reloadSec = rc.getLong("time_reload_collap_ad", 15L).toInt(),
+            expandedLayoutRes = R.layout.layout_native_ad_pirago_medium,
+            collapsedLayoutRes = R.layout.layout_native_ad_pirago_small,
         )
     }
 
