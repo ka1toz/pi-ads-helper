@@ -1,0 +1,173 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.pirago.ads-helper",
+    "module": "sdk",
+    "version": "1.0.2",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.4.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "com.google.android.gms",
+          "module": "play-services-ads",
+          "version": {
+            "requires": "23.6.0"
+          }
+        },
+        {
+          "group": "com.google.android.ump",
+          "module": "user-messaging-platform",
+          "version": {
+            "requires": "4.0.0"
+          }
+        },
+        {
+          "group": "androidx.lifecycle",
+          "module": "lifecycle-process",
+          "version": {
+            "requires": "2.8.7"
+          }
+        },
+        {
+          "group": "androidx.lifecycle",
+          "module": "lifecycle-common",
+          "version": {
+            "requires": "2.8.7"
+          }
+        },
+        {
+          "group": "com.google.firebase",
+          "module": "firebase-config",
+          "version": {
+            "requires": "23.0.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "sdk-1.0.2.aar",
+          "url": "sdk-1.0.2.aar",
+          "size": 144921,
+          "sha512": "f5cb9b7dcc4b4af69d03e9e0530bc2f60777bd69d1741e23eaa97192373cb9dbec40e3b1ad482ec510215ab8f479e2695867f5bbfbe72e9e36ff9886e327eebe",
+          "sha256": "086109c6eb644ed5759f746b5f626bb05361ec3ca329a7789bf846f57e2fe597",
+          "sha1": "b800ea2d47c29d5d762e05d3f7c97a5f9504f9d1",
+          "md5": "0f698b3c29371cc971cc7ba3416508b1"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.annotation",
+          "module": "annotation",
+          "version": {
+            "requires": "1.9.1"
+          }
+        },
+        {
+          "group": "com.google.android.gms",
+          "module": "play-services-ads",
+          "version": {
+            "requires": "23.6.0"
+          }
+        },
+        {
+          "group": "com.google.android.ump",
+          "module": "user-messaging-platform",
+          "version": {
+            "requires": "4.0.0"
+          }
+        },
+        {
+          "group": "androidx.lifecycle",
+          "module": "lifecycle-process",
+          "version": {
+            "requires": "2.8.7"
+          }
+        },
+        {
+          "group": "androidx.lifecycle",
+          "module": "lifecycle-common",
+          "version": {
+            "requires": "2.8.7"
+          }
+        },
+        {
+          "group": "com.google.firebase",
+          "module": "firebase-config",
+          "version": {
+            "requires": "23.0.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "sdk-1.0.2.aar",
+          "url": "sdk-1.0.2.aar",
+          "size": 144921,
+          "sha512": "f5cb9b7dcc4b4af69d03e9e0530bc2f60777bd69d1741e23eaa97192373cb9dbec40e3b1ad482ec510215ab8f479e2695867f5bbfbe72e9e36ff9886e327eebe",
+          "sha256": "086109c6eb644ed5759f746b5f626bb05361ec3ca329a7789bf846f57e2fe597",
+          "sha1": "b800ea2d47c29d5d762e05d3f7c97a5f9504f9d1",
+          "md5": "0f698b3c29371cc971cc7ba3416508b1"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "sdk-1.0.2-sources.jar",
+          "url": "sdk-1.0.2-sources.jar",
+          "size": 27616,
+          "sha512": "5b69dec888eec7d9eebf4060d17cf76c26878270d8a55b82f72fe466aba14f756956febbd683da61874305b31bcef7268742a0df5329f024a11e2105b9cc89a7",
+          "sha256": "f1fd7c015846b897d02e2f6c0facf19e25997c1ba2caf5c596038035b7f92144",
+          "sha1": "6896bd12c185528f1d0b72b81a7e9280623d6dad",
+          "md5": "9ed0d5facbe4d4824c144df05da95519"
+        }
+      ]
+    }
+  ]
+}
