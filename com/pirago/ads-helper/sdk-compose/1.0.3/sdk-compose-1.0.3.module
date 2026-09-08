@@ -1,0 +1,169 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.pirago.ads-helper",
+    "module": "sdk-compose",
+    "version": "1.0.3",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.4.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "com.pirago.ads-helper",
+          "module": "sdk",
+          "version": {
+            "requires": "1.0.3"
+          }
+        },
+        {
+          "group": "androidx.compose",
+          "module": "compose-bom",
+          "version": {
+            "requires": "2024.12.01"
+          },
+          "attributes": {
+            "org.gradle.category": "platform"
+          },
+          "endorseStrictVersions": true
+        },
+        {
+          "group": "androidx.compose.ui",
+          "module": "ui"
+        },
+        {
+          "group": "androidx.compose.foundation",
+          "module": "foundation"
+        },
+        {
+          "group": "androidx.activity",
+          "module": "activity-compose",
+          "version": {
+            "requires": "1.10.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "sdk-compose-1.0.3.aar",
+          "url": "sdk-compose-1.0.3.aar",
+          "size": 9523,
+          "sha512": "554c7f0d08c3f7a24b91d879c69fcec47330c52e7f8b31d989b2674202de692cc48c9948ac0d59540dd23da490f4ab1ba06b468045c8025a1aadeaadde16fcd9",
+          "sha256": "9753b37d1539edf8ac43570a282fc536c3b0a72d44af4978148165c5a654af10",
+          "sha1": "0619504eff84698a6cdc703adf6dd7153e2bae1c",
+          "md5": "dfbc370bfe8553024daf37edd48bf0e1"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.annotation",
+          "module": "annotation",
+          "version": {
+            "requires": "1.9.1"
+          }
+        },
+        {
+          "group": "com.pirago.ads-helper",
+          "module": "sdk",
+          "version": {
+            "requires": "1.0.3"
+          }
+        },
+        {
+          "group": "androidx.compose",
+          "module": "compose-bom",
+          "version": {
+            "requires": "2024.12.01"
+          },
+          "attributes": {
+            "org.gradle.category": "platform"
+          },
+          "endorseStrictVersions": true
+        },
+        {
+          "group": "androidx.compose.ui",
+          "module": "ui"
+        },
+        {
+          "group": "androidx.compose.foundation",
+          "module": "foundation"
+        },
+        {
+          "group": "androidx.activity",
+          "module": "activity-compose",
+          "version": {
+            "requires": "1.10.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "sdk-compose-1.0.3.aar",
+          "url": "sdk-compose-1.0.3.aar",
+          "size": 9523,
+          "sha512": "554c7f0d08c3f7a24b91d879c69fcec47330c52e7f8b31d989b2674202de692cc48c9948ac0d59540dd23da490f4ab1ba06b468045c8025a1aadeaadde16fcd9",
+          "sha256": "9753b37d1539edf8ac43570a282fc536c3b0a72d44af4978148165c5a654af10",
+          "sha1": "0619504eff84698a6cdc703adf6dd7153e2bae1c",
+          "md5": "dfbc370bfe8553024daf37edd48bf0e1"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "sdk-compose-1.0.3-sources.jar",
+          "url": "sdk-compose-1.0.3-sources.jar",
+          "size": 1455,
+          "sha512": "5754a9931bf32c4bae7bc8059e851d6b52e51c9124f027723d9496f54838b6c0ed77504bde0f743e1d8b847f676d6e9e294d04d4c46ccd89d3c8a54315f29ab5",
+          "sha256": "401cda237281e9914eb2baa25b74ae8a4424ee432f9a4a0a48f420f4ccefc0ef",
+          "sha1": "d783157ed5254709692e3e1eb169658d6f78b375",
+          "md5": "2cf60c7f614e755b8c7bde596d34447e"
+        }
+      ]
+    }
+  ]
+}
