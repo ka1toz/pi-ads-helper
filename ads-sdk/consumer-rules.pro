@@ -2,4 +2,5 @@
 -keep class com.google.ads.mediation.** { *; }
 -keep class com.google.android.ump.** { *; }
 -keep class com.ads.sdk.** { *; }
+-keep class com.ads.sdk.max.MaxMediationBridgeImpl { *; }
 -dontwarn com.google.firebase.remoteconfig.**

@@ -34,8 +34,10 @@ class SplashActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 AdsSdk.consent.obtainAndShow(this@SplashActivity) {
                     status = "Open ads…"
-                    AdsSdk.native.preload(applicationContext, "home_collap", TestAdUnits.NATIVE)
-                    AdsSdk.native.preload(applicationContext, "home_collap_collapsed", TestAdUnits.NATIVE)
+                    if (!AdsSdk.isMax) {
+                        AdsSdk.native.preload(applicationContext, "home_collap", AdsSdk.units.native.ifBlank { TestAdUnits.NATIVE })
+                        AdsSdk.native.preload(applicationContext, "home_collap_collapsed", AdsSdk.units.native.ifBlank { TestAdUnits.NATIVE })
+                    }
                     AdsSdk.openAds.showIfEligible(
                         this@SplashActivity,
                         object : AdCallback {

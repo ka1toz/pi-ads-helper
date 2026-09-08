@@ -73,7 +73,7 @@ class ConsentController internal constructor() {
     }
 
     private fun finish(activity: Activity, onComplete: () -> Unit) {
-        initializeMobileAds(activity.applicationContext) { onComplete() }
+        AdsSdk.ensureNetworkSdk(activity.applicationContext) { onComplete() }
     }
 
     internal fun initializeMobileAds(context: Context, onReady: (() -> Unit)? = null) {

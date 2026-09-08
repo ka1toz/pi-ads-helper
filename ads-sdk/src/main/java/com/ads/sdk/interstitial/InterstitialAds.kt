@@ -24,9 +24,17 @@ class InterstitialAds internal constructor() {
     @Volatile
     private var showing = false
 
-    fun isReady(): Boolean = loaded != null
+    fun isReady(): Boolean = if (AdsSdk.isMax) {
+        AdsSdk.maxBridge?.isInterstitialReady() == true
+    } else {
+        loaded != null
+    }
 
     fun load(activity: Activity, adUnitId: String, callback: AdCallback? = null) {
+        if (AdsSdk.isMax) {
+            loadMax(activity, adUnitId, callback)
+            return
+        }
         AdsSdk.consent.initializeMobileAds(activity.applicationContext)
         InterstitialAd.load(
             activity,
@@ -57,6 +65,10 @@ class InterstitialAds internal constructor() {
         }
         val ad = loaded
         if (ad == null) {
+            if (AdsSdk.isMax) {
+                presentMax(activity, callback, reason)
+                return
+            }
             callback.onAdFailedToLoad(AdError(message = "interstitial not loaded"))
             callback.safeNext()
             return
@@ -81,6 +93,27 @@ class InterstitialAds internal constructor() {
         loaded?.takeIf { loadedUnitId == adUnitId }?.let { ad ->
             AdsSdk.funnel(FunnelEvent.InterApiCalled)
             present(activity, ad, callback, reason)
+            return
+        }
+        if (AdsSdk.isMax && AdsSdk.maxBridge?.isInterstitialReady() == true) {
+            AdsSdk.funnel(FunnelEvent.InterApiCalled)
+            presentMax(activity, callback, reason)
+            return
+        }
+        if (AdsSdk.isMax) {
+            loadMax(activity, adUnitId, object : AdCallback by callback {
+                override fun onAdLoaded() {
+                    callback.onAdLoaded()
+                    presentMax(activity, callback, reason)
+                }
+
+                override fun onAdFailedToLoad(error: AdError?) {
+                    callback.onAdFailedToLoad(error)
+                    callback.safeNext()
+                }
+
+                override fun onNextAction() = Unit
+            })
             return
         }
         AdsSdk.consent.initializeMobileAds(activity.applicationContext)
@@ -148,6 +181,9 @@ class InterstitialAds internal constructor() {
                 if (reason == InterShowReason.Content) {
                     AdsSdk.interval.markContentDismissed()
                 }
+                if (reason == InterShowReason.Resume) {
+                    AdsSdk.resumeInterval.markContentDismissed()
+                }
                 callback.onAdDismissed()
                 callback.safeNext()
             }
@@ -161,5 +197,67 @@ class InterstitialAds internal constructor() {
             }
         }
         ad.show(activity)
+    }
+
+    private fun loadMax(activity: Activity, adUnitId: String, callback: AdCallback?) {
+        if (adUnitId.isBlank()) {
+            callback?.onAdFailedToLoad(AdError(message = "max interstitial unit empty"))
+            return
+        }
+        val bridge = AdsSdk.maxBridge
+        if (bridge == null) {
+            callback?.onAdFailedToLoad(AdError(message = "sdk-max missing"))
+            return
+        }
+        AdsSdk.ensureNetworkSdk(activity.applicationContext) {
+            bridge.loadInterstitial(
+                activity,
+                adUnitId,
+                object : AdCallback {
+                    override fun onNextAction() = Unit
+                    override fun onAdLoaded() {
+                        AdsSdk.funnel(FunnelEvent.InterApiCalled)
+                        callback?.onAdLoaded()
+                    }
+                    override fun onAdFailedToLoad(error: AdError?) {
+                        callback?.onAdFailedToLoad(error)
+                    }
+                },
+            )
+        }
+    }
+
+    private fun presentMax(activity: Activity, callback: AdCallback, reason: InterShowReason) {
+        val bridge = AdsSdk.maxBridge
+        if (bridge == null || !bridge.isInterstitialReady()) {
+            callback.onAdFailedToLoad(AdError(message = "max interstitial not loaded"))
+            callback.safeNext()
+            return
+        }
+        if (showing) {
+            callback.safeNext()
+            return
+        }
+        showing = true
+        AdsSdk.appOpen.setShowingFullScreen(true)
+        val shown = object : AdCallback by callback {
+            override fun onAdShown() {
+                AdsSdk.funnel(FunnelEvent.InterDisplayed)
+                callback.onAdShown()
+            }
+            override fun onNextAction() = Unit
+        }
+        bridge.showInterstitial(activity, shown) {
+            showing = false
+            AdsSdk.appOpen.setShowingFullScreen(false)
+            if (reason == InterShowReason.Content) {
+                AdsSdk.interval.markContentDismissed()
+            }
+            if (reason == InterShowReason.Resume) {
+                AdsSdk.resumeInterval.markContentDismissed()
+            }
+            callback.onAdDismissed()
+            callback.safeNext()
+        }
     }
 }

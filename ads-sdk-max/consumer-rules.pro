@@ -1,0 +1,3 @@
+-keep class com.ads.sdk.max.MaxMediationBridgeImpl { *; }
+-keep class com.applovin.** { *; }
+-dontwarn com.applovin.**

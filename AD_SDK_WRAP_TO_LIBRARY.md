@@ -1,13 +1,34 @@
 # Plan: Android Ads SDK (Compose + XML)
 
-Tài liệu này là **source of truth** để đóng gói thư viện ads dùng cho app Android thuần.
+Tài liệu này là **plan + lịch sử v1**. Hợp đồng app đích hiện tại: [SDK_INTEGRATION.md](SDK_INTEGRATION.md). Native Themie: [NATIVE_CUSTOM_LAYOUT_ALIAS_FIX.md](NATIVE_CUSTOM_LAYOUT_ALIAS_FIX.md) (**đã ship**, không còn gap ticket).
 
 - Engine tham khảo (không ship binary Unity): `sub-ads-demo` / AAR JBase — chỉ học Init, interval, AOA, UMP, paid-event.
 - Consumer tham khảo: Led Banner (`/Users/vu/projects/android/led-banner/ledbanner`) gọi `com.nlbn.ads` / VTN 2.0.0.
-- Brief đối tác điển hình: `Pirago_Dog Translator_Monet.xlsx` (sheet AdRemoteEvent + Feedback) — pattern placement + RC + native collap + funnel AF.
-- **Không copy** package `com.nlbn.ads`, allowlist `package_apps.json`, hay `isLoadFullAds` organic/paid.
+- Brief đối tác điển hình: Pirago monet (Dog Translator / Haircut) — placement + RC + native collap + funnel AF + **`mediation_type`**.
+- **Không copy** package `com.nlbn.ads`, allowlist `package_apps.json`, hay `isLoadFullAds` organic/paid. **Không** bọc AAR JBase (`maxads-release.aar`, `UnityPlayer`).
 
-Cập nhật so với bản plan trước: **bỏ UnityPlayer, v1 chỉ AdMob, banner/native gắn `ViewGroup` để XML và Compose dùng chung.**
+## Trạng thái hiện tại (SoT — đọc cái này, không đọc “v1 chỉ AdMob” bên dưới như lệnh)
+
+Maven: `com.pirago.ads-helper` — Pages `https://ka1toz.github.io/pi-ads-helper/`. **Không** dùng `com.yourorg.ads`.
+
+| Artifact | Module | 1.0.2 (Pages) | 1.0.3 (source hiện tại) |
+|---|---|---|---|
+| `sdk` | `:ads-sdk` | GMA public API | + `AdsSdk.units` / `isMax` / `mrec` |
+| `sdk-compose` | `:ads-sdk-compose` | `AndroidView` | + `AdsMrec` |
+| `sdk-max` | `:ads-sdk-max` | **Không có** | Optional MAX (pin AppLovin). App thêm nếu hỗ trợ `mediation_type = 0` |
+
+**Đã chốt, đã code, version `1.0.3` trên source.** Public Pages khi `publishAdsSdk` + rsync `gh-pages` (**giữ** 1.0.2).
+
+- Dual-engine **trong APK**. Firebase `mediation_type`: `0` = MAX, `1` = AdMob Mediation, default **1**.
+- Một mediator / session. Đổi RC chỉ có hiệu lực cold start sau.
+- MAX **đúng 4** ad unit: Inter, AOA, Banner, MREC. Không native MAX, không rewarded MAX.
+- Native medium/small/collap/after-inter = AdMob only. MREC = MAX only. Inter/AOA/banner = cả hai.
+- Placement flags (`is_show_inter_*`, `is_show_mrec_*`, …) **ở app**. SDK đọc knob global (tên key qua `AdsConfig`).
+- Haircut: `aoa_type` / `resume_type` = chuỗi `inter` \| `aoa` \| rỗng → field **`formatRemoteKey`** / **`resumeTypeRemoteKey`**. Không nhét chuỗi vào field boolean Led Banner.
+- Kids/Families: không init MAX.
+- Demo `:demo-xml` / `:demo-compose` **không** depend `:ads-sdk-max` (ở lại GMA).
+
+Phase 0–4 (GMA ViewGroup, UMP, native collap, publish 1.0.2) **đã xong**. Phase 5 MAX module **đã code**, version source **1.0.3**; Pages còn 1.0.2 cho đến khi rsync `gh-pages`.
 
 ---
 
@@ -23,25 +44,29 @@ Cập nhật so với bản plan trước: **bỏ UnityPlayer, v1 chỉ AdMob, b
 | Demo reflection / Init AdMob sai overload | Đúng nợ, nhưng không phải nền tảng library |
 | `onNextAction()` luôn chạy kể cả fail | **Giữ** — Led Banner navigation phụ thuộc cái này |
 
-**Kết luận:** hình API consumer (VTN-style) hợp lý. Hình **engine = AAR JBase** không hợp lý nếu muốn thư viện Android + Compose/XML. v1 viết **GMA owned** (Google Mobile Ads) trong `:ads-sdk`. AAR JBase chỉ là tài liệu hành vi (interval, resume AOA, RC keys game). MAX / mediation = phase sau, module optional.
+**Kết luận (v1, đã giữ):** hình API consumer (VTN-style) hợp lý. Hình **engine = AAR JBase** không hợp lý. Core viết **GMA owned** trong `:ads-sdk`. AAR JBase chỉ là tài liệu hành vi.
+
+**Cập nhật sau v1:** MAX **không** nằm trong artifact `sdk` mặc định. Module optional `:ads-sdk-max` (`sdk-max`) + reflection loader. AdMob Mediation adapters vẫn **app thêm**. Không wrap JBase MAX AAR.
 
 ---
 
 ## 1. Mục tiêu
 
-1. Artifact Gradle: `com.yourorg.ads:sdk:<version>` — app `implementation`, gọi API typed.
-2. Host **XML View** và **Jetpack Compose** cùng một API. SDK **không** phụ thuộc Compose. Compose chỉ `AndroidView` bọc `ViewGroup`.
-3. AdMob thuần (v1). Không Unity, không reflection, không `UnityPlayer`.
-4. Đủ port Led Banner: splash inter + timeout, App Open resume + exclude Activity, banner adaptive/collapsible **vào container**, native custom layout, inter interval, consent UMP.
-5. Paid-event pluggable (Firebase + AppsFlyer hoặc Adjust — Led Banner đang Adjust; demo JBase đang AppsFlyer).
+1. Artifact Gradle: `com.pirago.ads-helper:sdk:<version>` (+ optional `sdk-compose`, `sdk-max`) — app `implementation`, gọi API typed.
+2. Host **XML View** và **Jetpack Compose** cùng một API. `:ads-sdk` **không** phụ thuộc Compose. Compose chỉ `AndroidView` bọc `ViewGroup`.
+3. Core GMA owned. Không Unity, không `UnityPlayer`, không bọc AAR JBase. Optional MAX qua `:ads-sdk-max` (không pin vào `sdk`).
+4. Đủ port Led Banner + Pirago: splash/open, resume, banner/native vào container, native custom XML (Themie alias), inter interval, UMP, `mediation_type`.
+5. Paid-event pluggable (Firebase + AppsFlyer hoặc Adjust).
 
-### Không làm (v1)
+### Không làm (vẫn cấm)
 
-- MAX / waterfall mediation **SDK khác** trong artifact mặc định. **AdMob Mediation** (adapter GMA) app tự thêm — OK v1.
-- Redistribute 6 AAR JBase obfuscated.
-- Clone `com.nlbn.ads` drop-in (có thể làm `:ads-compat-vtn` sau).
+- Pin MAX / adapter mạng (Meta, Mintegral, …) vào artifact `sdk` mặc định. App tự thêm adapter. `sdk-max` chỉ pin AppLovin core.
+- Redistribute 6 AAR JBase obfuscated / `UnityPlayer`.
+- Clone `com.nlbn.ads` drop-in.
 - IAP tắt ads, rate dialog, `isLoadFullAds` organic.
 - Hard-code “show ads everywhere” — policy do app + Remote Config app.
+- Native / rewarded MAX; ad unit MAX thứ 5.
+- Init MAX + AdMob Mediation cùng session.
 
 ---
 
@@ -101,13 +126,14 @@ Chia 3 tầng: **SDK bắt buộc**, **SDK nên có**, **app (không nhét vào 
 
 | Tính năng | Lý do |
 |---|---|
-| Native Fullscreen onboarding chrome | Layout full + chỗ **Next của app** ngoài `NativeAdView` (Next không được tính ad click) |
-| MREC vào `ViewGroup` | Game; brief Dog Translator không dùng |
+| Native Fullscreen onboarding chrome | Layout full + chỗ **Next của app** ngoài `NativeAdView`. Countdown close **app** (option A). Không `showFullscreen` SDK |
+| MREC vào `ViewGroup` | **Đã có** `AdsSdk.mrec` — **MAX only**. AdMob không load MREC |
 | Preload queue native (1 backup) | Led Banner reload khi `onAdImpression`; collap Home cần sẵn ad |
 | Loading dialog khi `loadAndShowInter` | VTN có; default **off** |
-| AdMob Mediation adapters | Header brief: “Sử dụng Admob Mediation”. v1 GMA + mediation **trên console AdMob** (adapter app thêm). MAX / waterfall SDK khác = phase sau |
-| `AdsApplication` base class | Optional — app Hilt (`@HiltAndroidApp`) không inherit được 2 Application; **ưu tiên** `AdsSdk.init` từ `Application.onCreate` |
-| Module `:ads-sdk-compose` | `BannerAd(modifier, config)`, `NativeAd(layoutRes)` = `AndroidView` convenience — **không** bắt buộc |
+| AdMob Mediation adapters | App tự thêm; dùng khi `mediation_type = 1` |
+| Module `:ads-sdk-max` | Optional; `mediation_type = 0`. 4 format. Loader reflection từ `:ads-sdk` |
+| `AdsApplication` base class | Optional — **ưu tiên** `AdsSdk.init` từ `Application.onCreate` (Koin) |
+| Module `:ads-sdk-compose` | `AdsBanner` / `AdsNative` / `AdsBottom` / `AdsMrec` = `AndroidView` — **không** bắt buộc |
 
 ### 2.3 Việc của app — không đưa vào SDK
 
@@ -174,14 +200,16 @@ Key SDK được phép đọc (app truyền **tên key**, không hard-code). Hai
 
 | Led Banner | Pirago / Dog Translator | Dùng cho |
 |---|---|---|
-| `interval_show_interstitial` | `ads_interval` (number, default 15) | Cooldown inter (có ngoại lệ open/resume) |
-| `cb_fetch_interval` | `time_reload_collap_ad` (number, default 15) | Reload collapsible — **banner** (Led) vs **native collap** (Pirago) |
-| optional resume ad unit | `show_resum_ads` (boolean) | Bật resume; format Inter hoặc AOA do `AdsConfig` |
-| — | `show_open_ads`, `show_open_ads_first_open`, `show_opens_ads_type` | Cold start on/off, first-open AND, Inter vs AOA |
-| — | `is_show_native_small` | Swap Native Small / Banner |
-| optional JSON `configKey` banner | — | Type + refresh — v1.1 |
+| `interval_show_interstitial` | `ads_interval` (number) | Cooldown inter content. Haircut default brief **10**. Exempt open/resume |
+| `cb_fetch_interval` | `time_reload_collap_ad` / `time_reload_native_collap` | Reload collapsible — **banner** (Led) vs **native collap** (Pirago) |
+| `show_resum_ads` (boolean) | `resume_type` (string `inter`\|`aoa`\|rỗng) | Led: `resumeRemoteKey`. Haircut: **`resumeTypeRemoteKey`**. Rỗng = tắt |
+| `show_open_ads` + `show_opens_ads_type` (boolean) | `aoa_type` (string) + `show_aoa_first_open` | Led: `enabledRemoteKey` + `typeIsInterRemoteKey`. Haircut: **`formatRemoteKey`**. Rỗng = tắt |
+| — | `resume_ads_interval` | Giãn cách resume; **không** dùng `ads_interval` |
+| — | `mediation_type` (0 MAX / 1 AdMob, default 1) | SDK đọc qua `mediationRemoteKey` |
+| — | `is_show_native_small` | Swap Native Small / Banner — **AdMob**. MAX: MREC cùng slot |
+| optional JSON `configKey` banner | — | Type + refresh — chưa làm |
 
-**Không** đọc `is_show_inter_*` / `is_show_native_*` / `is_load_*` (placement) trong SDK. **Không** đọc `rating_popup`.
+SDK đọc thêm `mediation_type` (qua `mediationRemoteKey`). **Không** đọc `is_show_inter_*` / `is_show_native_*` / `is_show_mrec_*` / `is_load_*` (placement). **Không** đọc `rating_popup`.
 
 `AdsSdk.init` phải **await** fetch (hoặc nhận `Task`) trước splash load — Led Banner splash timeout 30s vừa UMP vừa RC; SDK document: consent + RC ready rồi mới `loadSplashInter` / open ads.
 
@@ -195,7 +223,7 @@ Nguồn: sheet **AdRemoteEvent** + **Feedback** của `Pirago_Dog Translator_Mon
 
 | Layer | Pattern trong Excel | SDK hay App |
 |---|---|---|
-| Header | “Sử dụng **Admob Mediation**” | Console AdMob + adapter; không bắt MAX v1 |
+| Header | “Sử dụng **Admob Mediation**” và/hoặc Haircut `mediation_type` | Console + adapter **app**; MAX = optional `sdk-max`, không JBase AAR |
 | Catalog | Type × Screen × Position × Time + RC kill-switch, default **FALSE** | **App** map placement; SDK không hard-code tên màn |
 | AOA / Open | Cold start + resume; RC first-open AND; **đổi format Inter/AOA** | **SDK** |
 | Inter | Nhiều trigger (back home, after onboarding, switch feature, sau action…) + `ads_interval` 15s | App gọi `loadAndShow`; SDK interval + exempt |
@@ -222,15 +250,20 @@ Splash timeout, inter `onNextAction`, banner collapsible vào `ViewGroup`, nativ
 8. **Funnel AppsFlyer** `af_inters_ad_eligible` / `af_inters_api_called` / `af_inters_displayed` (+ rewarded tương tự), không chỉ paid-event.
 9. **Firebase `ad_impression` thủ công** đúng param Google (platform, source, format, unit, value, currency).
 10. **Rewarded API** trong v1 — đối tác hay thêm kịch bản RW sau.
-11. **AdMob Mediation** = GMA + adapter; khác MAX.
+11. **AdMob Mediation** = GMA + adapter khi session = `1`. **MAX** = `sdk-max` khi session = `0`. Không cùng lúc.
+12. **Haircut string RC** (`aoa_type` / `resume_type`) song song boolean Led Banner — field `AdsConfig` khác nhau, xem SDK_INTEGRATION §5.1.
 
-#### Logic RC open ads (copy từ brief — SDK phải implement đúng AND)
+#### Logic RC open ads
 
+**Led Banner (boolean, default SDK):**  
 Lần mở **đầu**: show chỉ khi `show_open_ads_first_open == true` **và** `show_open_ads == true`.  
 Lần **2+**: chỉ `show_open_ads`.  
-Format slot đó: `show_opens_ads_type == true` → Inter, `false` → AOA.
+Format: `show_opens_ads_type == true` → Inter, `false` → AOA.
 
-Resume (`show_resum_ads`): lock/unlock, về từ Home/app khác, về từ màn detail ads. Brief này: **Inter**. Không ăn `ads_interval`.
+**Pirago / Haircut (chuỗi):**  
+`aoa_type` = `inter` \| `aoa` \| rỗng (rỗng = tắt). First open: `show_aoa_first_open` AND type ≠ rỗng. Gán `OpenAdsConfig.formatRemoteKey`, **không** `enabledRemoteKey`.
+
+Resume Led: `show_resum_ads` boolean + `ResumeFormat`. Resume Haircut: `resume_type` chuỗi qua **`resumeTypeRemoteKey`**. Không ăn `ads_interval`; dùng `resume_ads_interval`.
 
 Native collap `time_reload_collap_ad`: `0` = sau collapse chỉ Small, không tự collap lại; `>0` = sau N giây hiện collap lại **và** đang collap thì cũng reload ad mới.
 
@@ -281,36 +314,43 @@ Sample repo: **một** Activity XML + **một** Activity Compose, cùng ad unit 
 ```
 App XML  ──┐
            ├──►  :ads-sdk          (public API, GMA owned, ViewGroup host)
-App Compose┘         │
+App Compose┘         │             AdsSdk.units / isMax / mrec (no-op nếu không max)
                      ├── UMP
-                     ├── Inter / Splash / Reward / AOA / Resume-as-Inter
-                     ├── Banner + Native (templates, collap → small)
+                     ├── Inter / Splash / Reward / AOA / Resume
+                     ├── Banner + Native (templates, collap → small) — AdMob
+                     ├── MREC — MAX only
                      └── RevenueLogger + FunnelLogger
                             │
                      GMA + UMP + (optional) Firebase Analytics
+                            │
+           optional :ads-sdk-max  (AppLovin; reflection từ MaxBridgeLoader)
 ```
 
-MAX / JBase AAR **không** nằm trên đường đi v1.
+MAX **không** nằm trong AAR `sdk`. App thêm `sdk-max` + 4 ID + `applovin.sdk.key` nếu hỗ trợ nhánh `0`.
 
-Hilt: Led Banner `class App : AdsApplication()`. App Hilt không extend 2 class → `AdsSdk.init(this, config)` trong `onCreate()` là API chính. `AdsApplication` chỉ convenience cho app không Hilt.
+Hilt/Koin: `AdsSdk.init(this, config)` trong `onCreate()` là API chính. App đích dùng **Koin**.
 
 ```
 ad-sdk/
-  ads-sdk/                 # Android library, minSdk 24
+  ads-sdk/                 # Android library, minSdk 24 — artifact sdk
   ads-sdk-compose/         # optional, api(ads-sdk) + compose
-  demo-xml/                # sample ViewBinding
-  demo-compose/            # sample setContent (sub-ads-demo rút gọn)
+  ads-sdk-max/             # optional, api(ads-sdk) + applovin-sdk — artifact sdk-max
+  demo-xml/                # sample ViewBinding (GMA; không depend sdk-max)
+  demo-compose/            # sample setContent (GMA)
+  app/                     # legacy JBase — không ship
 ```
 
-Publish: `com.yourorg.ads:sdk` và optional `com.yourorg.ads:sdk-compose`.
+Publish: `com.pirago.ads-helper:sdk` + `sdk-compose` + `sdk-max`. `./gradlew publishAdsSdk`.
 
 ---
 
-## 5. Public API v1 (sketch)
+## 5. Public API (sketch — đối chiếu code `AdsConfig.kt`)
 
 ```kotlin
 object AdsSdk {
     fun init(application: Application, config: AdsConfig)
+    val isMax: Boolean
+    val units: ResolvedAdUnits
     val consent: ConsentController
     val interstitial: InterstitialAds
     val splash: SplashAds
@@ -318,64 +358,58 @@ object AdsSdk {
     val native: NativeAds
     val appOpen: AppOpenAds
     val rewarded: RewardedAds
+    val mrec: MrecAds
 }
 
 data class AdsConfig(
-    val debug: Boolean,
-    val testDeviceIds: List<String> = emptyList(),
-    val appsFlyerDevKey: String? = null,       // hoặc adjustToken — một revenue backend
-    val adjustToken: String? = null,
+    val debug: Boolean = false,
     val interstitialIntervalSec: Int = 15,
-    val interstitialIntervalRemoteKey: String? = "interval_show_interstitial", // hoặc ads_interval
+    val interstitialIntervalRemoteKey: String? = "interval_show_interstitial", // Haircut: "ads_interval"
     val enableResumeAds: Boolean = true,
+    val resumeRemoteKey: String? = "show_resum_ads",          // boolean Led Banner
+    val resumeTypeRemoteKey: String? = null,                  // Haircut "resume_type"
+    val resumeAdsIntervalRemoteKey: String? = "resume_ads_interval",
     val resumeAdUnitId: String? = null,
-    val resumeFormat: ResumeFormat = ResumeFormat.AppOpen, // Interstitial nếu brief Pirago
+    val resumeFormat: ResumeFormat = ResumeFormat.AppOpen,
     val openAds: OpenAdsConfig = OpenAdsConfig(),
-    val remote: RemoteConfigPolicy = RemoteConfigPolicy.ReadOnly,
+    val remote: RemoteConfigPolicy = RemoteConfigPolicy.None,
+    val admob: AdmobAdUnits? = null,
+    val max: MaxAdUnits? = null,                              // 4 key
+    val mediationRemoteKey: String? = "mediation_type",
+    val mediationDefault: Int = 1,
     val revenueLogger: RevenueLogger? = null,
-    val funnelLogger: FunnelLogger? = null,    // AppsFlyer af_inters_* / af_rewarded_*
+    val funnelLogger: FunnelLogger? = null,
 )
 
 data class OpenAdsConfig(
     val enabledRemoteKey: String? = "show_open_ads",
     val firstOpenRemoteKey: String? = "show_open_ads_first_open",
-    val typeIsInterRemoteKey: String? = "show_opens_ads_type", // true=Inter, false=AOA
-    val firstOpenAdUnitId: String? = null,
+    val typeIsInterRemoteKey: String? = "show_opens_ads_type",
+    val formatRemoteKey: String? = null,                      // Haircut "aoa_type"
+    val appOpenAdUnitId: String? = null,
+    val interstitialAdUnitId: String? = null,
 )
 
-enum class NativeTemplate { Small, Medium, MediumCtaFirst, Fullscreen }
-
-data class NativeCollapConfig(
-    val expandedUnitId: String,
-    val collapsedUnitId: String,               // Native Small sau collapse
-    val reloadSecRemoteKey: String? = "time_reload_collap_ad",
-    val reloadSec: Int = 15,                   // 0 = không tự expand lại
-)
-
-interface AdCallback {
-    fun onNextAction()                         // LUÔN gọi
-    fun onAdLoaded() {}
-    fun onAdFailedToLoad(error: AdError?) {}
-    fun onAdShown() {}
-    fun onAdImpression() {}
-    fun onAdClicked() {}
-    fun onAdDismissed() {}
-}
-
-data class BannerConfig(
-    val adUnitId: String,
-    val type: BannerType,                      // Adaptive | CollapsibleBottom | CollapsibleTop | Standard
-    val refreshSec: Int = 0,
-    val collapsibleFetchIntervalSec: Int = 0,
+data class MaxAdUnits(
+    val interstitial: String = "",
+    val appOpen: String = "",
+    val banner: String = "",
+    val mrec: String = "",
 )
 ```
 
-Manifest app (bắt buộc, không nhét vào AAR library như giá trị cứng):
+Mẫu init Haircut đầy đủ: [SDK_INTEGRATION.md](SDK_INTEGRATION.md) §5. Native collap `expandedLayoutRes` / `collapsedLayoutRes`: [NATIVE_CUSTOM_LAYOUT_ALIAS_FIX.md](NATIVE_CUSTOM_LAYOUT_ALIAS_FIX.md).
+
+Manifest app:
 
 ```xml
 <meta-data
     android:name="com.google.android.gms.ads.APPLICATION_ID"
     android:value="${admobAppId}" />
+<!-- nếu hỗ trợ MAX -->
+<meta-data
+    android:name="applovin.sdk.key"
+    android:value="${applovinSdkKey}" />
 ```
 
 ---
@@ -403,57 +437,31 @@ Remote Config placement flags **không** thuộc SDK. SDK có thể expose `Remo
 
 ## 7. Phase
 
-### Phase 0 — Spec + sample host (1–2 ngày)
+### Phase 0–4 — GMA library (đã xong, đã public 1.0.2)
 
-- [x] Catalog tính năng (file này).
-- [ ] Chốt ad unit test GMA.
-- [ ] Demo XML `FrameLayout` + demo Compose `AndroidView` (chưa fill ads).
+- [x] Catalog, demo XML + Compose, GMA test units.
+- [x] `AdsSdk.init` + lifecycle, UMP, inter + interval exempt, splash, open ads, resume exclude, rewarded.
+- [x] Banner/native `ViewGroup`, templates, native collap, bottom slot, `:ads-sdk-compose`.
+- [x] Native Themie alias + `expandedLayoutRes` (option A).
+- [x] Revenue/funnel hooks, `consumer-rules.pro`, `publishAdsSdk` → Pages `com.pirago.ads-helper`.
 
-### Phase 1 — Core GMA owned (1 tuần)
+**Exit v1:** demo XML + Compose GMA; `onNextAction`; không Unity/JBase.
 
-- [ ] `AdsSdk.init` + lifecycle Activity.
-- [ ] Consent UMP.
-- [ ] Inter load / show / loadAndShow + interval **+ exempt** open/resume.
-- [ ] Splash timeout + retry onResume.
-- [ ] Open ads: first-open AND + format AOA|Inter.
-- [ ] App Open **và** resume-as-Inter + exclude Activity.
-- [ ] Rewarded load/show (demo 1 nút).
-- [ ] `onNextAction` contract + unit test fake.
+### Phase 4 — Pilot app đích
 
-**Exit:** XML + Compose: inter test, open ads AOA|Inter, resume AOA|Inter exclude Splash, 1 rewarded.
+- Themie / Haircut consume artifact (không sửa source SDK trong app).
+- So fill: splash/open, native language/home collap, inter, MAX MREC nếu app có `sdk-max`.
 
-### Phase 2 — In-layout ads (1–1.5 tuần) — phần quyết định Compose/XML
+### Phase 5 — Optional MAX (code + version 1.0.3)
 
-- [ ] Banner Adaptive vào `ViewGroup`.
-- [ ] Collapsible **banner** extras + refresh.
-- [ ] Native `AdLoader` + `bindNative` (headline, body, CTA, icon, MediaView).
-- [ ] Native template Small / Medium / Fullscreen (Next onboarding **ngoài** ad).
-- [ ] Native Collapsible → Small + `time_reload_collap_ad` + preload trước Home.
-- [ ] `loadBottomAd` swap Native Small / Banner.
-- [ ] Destroy / leak: `onRelease` Compose, `onDestroy` XML.
-- [ ] Optional `:ads-sdk-compose`.
+- [x] Module `:ads-sdk-max`, 4 format, `mediation_type`, `AdsSdk.units` / `isMax` / `mrec`.
+- [x] Compose `AdsMrec`.
+- [x] `adsSdk.version=1.0.3` + README `sdk-max`.
+- [ ] `publishAdsSdk` + đẩy `gh-pages` **giữ** 1.0.2.
+- [ ] Demo hoặc app đích verify fill MAX trên device (không bắt buộc compile).
+- [ ] Compat `com.nlbn.ads.util.Admob` — **chưa làm**, không block 1.0.3.
 
-**Exit:** Led Banner-like Home (native + collapsible banner) **và** Pirago-like Home (native collap hiện ngay) trên **cả** Compose sample và XML sample.
-
-### Phase 3 — Revenue + ProGuard + publish (2–3 ngày)
-
-- [ ] `RevenueLogger` Firebase `ad_impression` (đủ param) + AppsFlyer `af_ad_revenue` (Adjust optional).
-- [ ] `FunnelLogger`: `af_inters_ad_eligible` / `api_called` / `displayed` (+ rewarded).
-- [ ] `consumer-rules.pro`.
-- [ ] `maven-publish` mavenLocal.
-- [ ] README: XML vs Compose snippets + RC key mapping Led vs Pirago.
-
-### Phase 4 — Pilot Led Banner (sau v1)
-
-- Thay `vtn_ads_libs` trên branch riêng.
-- Giữ `AdsConfig` flags của app.
-- So fill: splash, native language/home, collapsible, inter create/back.
-
-### Phase 5 — Optional
-
-- MAX module.
-- Compat `com.nlbn.ads.util.Admob`.
-- Rewarded / MREC nếu game cần.
+Không làm: wrap JBase MAX AAR / `UnityPlayer`.
 
 ---
 
@@ -486,30 +494,39 @@ Giữ từ VTN: Application init, UMP, splash timeout, `onNextAction`, native bi
 10. Next onboarding nằm trong `NativeAdView` → click Next = click ads (policy + UX).
 11. Interval exempt sai → đối tác báo “không show resume/open vì dính 15s”.
 12. Funnel AF thiếu `eligible` trước khi show → đối tác so Fill/eligible trên AppsFlyer lệch.
+13. Haircut: gán `resume_type` vào `resumeRemoteKey` (boolean) → SDK đọc sai, resume gãy.
+14. Init MAX + AdMob Mediation cùng process; hoặc thiếu `sdk-max` khi RC = 0.
+15. Native XML trên nhánh MAX (phải MREC).
 
 ---
 
-## 10. Definition of done (v1)
+## 10. Definition of done
 
-- [ ] `implementation("com.yourorg.ads:sdk:1.0.0")` mavenLocal.
-- [ ] Không UnityPlayer, không reflection, không `files("*.aar")` JBase.
-- [ ] **Cùng API** chạy demo XML và demo Compose: consent → splash/open (AOA|Inter) → banner in-container → native Small/Medium/Full + **native collap** → inter interval (+ exempt) → resume AOA|Inter exclude → rewarded.
-- [ ] `onNextAction` không kẹt navigation.
-- [ ] Funnel AF + `ad_impression` Firebase bắn đủ param.
-- [ ] Consumer ProGuard `minifyEnabled true`.
-- [ ] README: init, XML `FrameLayout`, Compose `AndroidView`, `RemoteConfigPolicy`, mapping key Led vs Pirago, test IDs. App flags `is_show_*` / `is_load_*` không nằm trong SDK.
+### v1 (1.0.2 Pages) — đạt
+
+- [x] `implementation("com.pirago.ads-helper:sdk:1.0.2")` GitHub Pages.
+- [x] Không UnityPlayer, không `files("*.aar")` JBase trong library ship.
+- [x] Demo XML + Compose GMA: consent → open → banner/native collap → inter interval → resume exclude → rewarded.
+- [x] `onNextAction` không kẹt navigation.
+- [x] Consumer ProGuard.
+- [x] Native Themie alias + collap `layoutRes`.
+
+### 1.0.3 — source sẵn; Pages khi rsync
+
+- [x] Code `:ads-sdk-max` + `mediation_type` + 4 format + Haircut string RC.
+- [x] Docs: SDK_INTEGRATION / WRAP / NATIVE_FIX / README khớp field `AdsConfig`.
+- [x] `adsSdk.version=1.0.3`.
+- [ ] `publishAdsSdk` + `gh-pages` giữ 1.0.2.
+- [ ] (Nên) fill MAX trên device với SDK key + 4 unit thật.
 
 ---
 
-## 11. Việc làm tuần đầu (đã chỉnh)
+## 11. Public 1.0.3 lên GitHub Pages
 
-Làm ở `/Users/vu/projects/android/ad-sdk` (repo library), không nhét vào Led Banner.
+Repo library: `/Users/vu/projects/android/ad-sdk/sub-ads-demo`.
 
-1. Skeleton `:ads-sdk` + `AdsSdk.init` + lifecycle.
-2. Inter + splash + UMP trên **cả** `demo-xml` và `demo-compose`.
-3. Banner `ViewGroup` + Compose `AndroidView` cùng container API.
-4. Native bind custom layout + template Small/Medium + collap.
-5. Open-ads type + resume format + AF funnel.
-6. Mới tính pilot Led Banner / app Pirago-like.
+1. `./gradlew :ads-sdk:test publishAdsSdk`
+2. Đẩy source lên branch GitHub; Maven AAR lên **`gh-pages`** (không đẩy source vào `gh-pages`; **giữ** `sdk/1.0.2/`).
+3. App đích copy [SDK_INTEGRATION.md](SDK_INTEGRATION.md) rồi bump `implementation` `1.0.3`.
 
-Không làm: javap/wrapper AAR JBase, `UnityPlayer` shim, MAX router — trừ khi product đổi lại yêu cầu mediation MAX. AdMob Mediation adapters để app thêm.
+Không làm: javap/wrapper AAR JBase, `UnityPlayer` shim, native/rewarded MAX, init hai mediator cùng session.

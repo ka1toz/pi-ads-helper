@@ -1,6 +1,7 @@
 package com.ads.sdk.demo.compose
 
 import android.app.Application
+import com.ads.sdk.AdmobAdUnits
 import com.ads.sdk.AdsConfig
 import com.ads.sdk.AdsSdk
 import com.ads.sdk.OpenAdsConfig
@@ -27,6 +28,13 @@ class ComposeDemoApplication : Application() {
                     enabledDefault = true,
                     firstOpenDefault = true,
                     typeIsInterDefault = false,
+                ),
+                admob = AdmobAdUnits(
+                    banner = TestAdUnits.ADAPTIVE_BANNER,
+                    native = TestAdUnits.NATIVE,
+                    interstitial = TestAdUnits.INTERSTITIAL,
+                    rewarded = TestAdUnits.REWARDED,
+                    appOpen = TestAdUnits.APP_OPEN,
                 ),
                 remote = RemoteConfigPolicy.None,
                 revenueLogger = LogcatRevenueLogger(),

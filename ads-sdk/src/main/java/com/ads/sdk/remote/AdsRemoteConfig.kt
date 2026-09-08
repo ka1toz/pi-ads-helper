@@ -1,6 +1,8 @@
 package com.ads.sdk.remote
 
 import com.ads.sdk.AdsConfig
+import com.ads.sdk.Mediation
+import com.ads.sdk.OpenAdFormat
 import com.ads.sdk.RemoteConfigPolicy
 import com.ads.sdk.internal.SdkLog
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
@@ -85,6 +87,43 @@ class AdsRemoteConfig internal constructor(
             getLong(key, config.interstitialIntervalSec.toLong())
         }
         return fromRc.toInt().coerceAtLeast(0)
+    }
+
+    fun resumeAdsIntervalSec(): Int {
+        val key = config.resumeAdsIntervalRemoteKey
+        val fromRc = if (key.isNullOrBlank()) {
+            config.resumeAdsIntervalSec.toLong()
+        } else {
+            getLong(key, config.resumeAdsIntervalSec.toLong())
+        }
+        return fromRc.toInt().coerceAtLeast(0)
+    }
+
+    fun mediationType(): Mediation {
+        val key = config.mediationRemoteKey
+        val raw = if (key.isNullOrBlank()) {
+            config.mediationDefault
+        } else {
+            mediationRaw(key, config.mediationDefault)
+        }
+        return Mediation.fromRemote(raw)
+    }
+
+    fun openAdFormat(key: String?, default: OpenAdFormat): OpenAdFormat {
+        if (key.isNullOrBlank()) return default
+        val value = valueOrNull(key) ?: return default
+        val asString = runCatching { value.asString() }.getOrNull()
+        return OpenAdFormat.parse(asString, default)
+    }
+
+    private fun mediationRaw(key: String, default: Int): Int {
+        val value = valueOrNull(key) ?: return default
+        runCatching { value.asLong().toInt() }.getOrNull()?.let { return it }
+        val asString = runCatching { value.asString() }.getOrNull()?.trim().orEmpty()
+        if (asString.isNotEmpty()) {
+            asString.toDoubleOrNull()?.toInt()?.let { return it }
+        }
+        return default
     }
 
     private fun valueOrNull(key: String) = firebaseOrNull()?.getValue(key)?.takeIf {

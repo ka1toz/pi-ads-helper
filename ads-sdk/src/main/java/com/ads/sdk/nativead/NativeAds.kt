@@ -38,6 +38,11 @@ class NativeAds internal constructor() {
     private val inFlightLoaders = Collections.synchronizedSet(mutableSetOf<AdLoader>())
 
     fun preload(context: Context, placement: String, adUnitId: String, callback: AdCallback? = null) {
+        if (AdsSdk.isMax) {
+            SdkLog.w("Native preload skipped: MAX session")
+            callback?.onAdFailedToLoad(AdError(message = "native is AdMob-only"))
+            return
+        }
         loadInternal(context, adUnitId, callback) { ad ->
             cache[placement]?.ad?.destroy()
             cache[placement] = Cached(ad)
@@ -45,6 +50,11 @@ class NativeAds internal constructor() {
     }
 
     fun load(context: Context, adUnitId: String, callback: NativeLoadCallback) {
+        if (AdsSdk.isMax) {
+            SdkLog.w("Native load skipped: MAX session")
+            callback.onAdFailedToLoad(AdError(message = "native is AdMob-only"))
+            return
+        }
         loadInternal(context, adUnitId, callback) { ad ->
             callback.onNativeLoaded(ad)
         }
@@ -123,6 +133,12 @@ class NativeAds internal constructor() {
         placement: String? = null,
         callback: AdCallback? = null,
     ) {
+        if (AdsSdk.isMax) {
+            SdkLog.w("Native bind skipped: MAX session")
+            shimmer?.visibility = View.GONE
+            callback?.onAdFailedToLoad(AdError(message = "native is AdMob-only"))
+            return
+        }
         shimmer?.visibility = View.VISIBLE
         val preloaded = placement?.let { takePreloaded(it) }
         if (preloaded != null) {
@@ -157,6 +173,11 @@ class NativeAds internal constructor() {
         placement: String? = null,
         callback: AdCallback? = null,
     ) {
+        if (AdsSdk.isMax) {
+            SdkLog.w("Native collap skipped: MAX session")
+            callback?.onAdFailedToLoad(AdError(message = "native is AdMob-only"))
+            return
+        }
         NativeCollapsibleController(this).attach(activity, container, config, placement, callback)
     }
 

@@ -47,8 +47,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 homeBottom = homeBottom,
             )
         }
-        AdsSdk.native.preload(application, "home_collap", TestAdUnits.NATIVE)
-        AdsSdk.native.preload(application, "home_collap_collapsed", TestAdUnits.NATIVE)
+        if (!AdsSdk.isMax) {
+            AdsSdk.native.preload(application, "home_collap", TestAdUnits.NATIVE)
+            AdsSdk.native.preload(application, "home_collap_collapsed", TestAdUnits.NATIVE)
+        }
     }
 
     fun onIntent(intent: HomeIntent) {
@@ -56,7 +58,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             HomeIntent.ShowInter -> emitShowInter(ignoreInterval = false)
             HomeIntent.ShowInterForce -> emitShowInter(ignoreInterval = true)
             HomeIntent.ShowRewarded -> viewModelScope.launch {
-                _effects.send(HomeEffect.ShowRewarded(TestAdUnits.REWARDED))
+                _effects.send(HomeEffect.ShowRewarded(AdsSdk.units.rewarded.ifBlank { TestAdUnits.REWARDED }))
             }
             HomeIntent.ToggleResume -> {
                 val enabled = !_state.value.resumeEnabled
@@ -85,7 +87,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _effects.send(
                 HomeEffect.ShowInter(
-                    adUnitId = TestAdUnits.INTERSTITIAL,
+                    adUnitId = AdsSdk.units.interstitial.ifBlank { TestAdUnits.INTERSTITIAL },
                     ignoreInterval = ignoreInterval,
                 ),
             )

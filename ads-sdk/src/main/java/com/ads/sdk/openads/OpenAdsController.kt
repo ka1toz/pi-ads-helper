@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import com.ads.sdk.AdsSdk
 import com.ads.sdk.InterShowReason
+import com.ads.sdk.OpenAdFormat
 import com.ads.sdk.callback.AdCallback
 import com.ads.sdk.internal.SdkLog
 import com.ads.sdk.safeNext
@@ -12,13 +13,14 @@ class OpenAdsController internal constructor() {
 
     fun showIfEligible(activity: Activity, callback: AdCallback) {
         val cfg = AdsSdk.config.openAds
-        val rc = AdsSdk.remoteConfig
-        val showOpen = cfg.enabledRemoteKey?.let { rc.getBoolean(it, cfg.enabledDefault) } ?: cfg.enabledDefault
-        val showFirst = cfg.firstOpenRemoteKey?.let { rc.getBoolean(it, cfg.firstOpenDefault) } ?: cfg.firstOpenDefault
-        val asInter = cfg.typeIsInterRemoteKey?.let { rc.getBoolean(it, cfg.typeIsInterDefault) } ?: cfg.typeIsInterDefault
+        val format = resolveFormat()
+        val showOpen = format != OpenAdFormat.Off
+        val showFirst = cfg.firstOpenRemoteKey?.let {
+            AdsSdk.remoteConfig.getBoolean(it, cfg.firstOpenDefault)
+        } ?: cfg.firstOpenDefault
         val first = isFirstOpen(activity)
         val eligible = OpenAdsEligibility.shouldShow(first, showOpen, showFirst)
-        SdkLog.d("Open ads first=$first showOpen=$showOpen showFirst=$showFirst asInter=$asInter eligible=$eligible")
+        SdkLog.d("Open ads first=$first format=$format showFirst=$showFirst eligible=$eligible")
         if (!eligible) {
             markFirstOpenDone(activity)
             callback.safeNext()
@@ -30,9 +32,9 @@ class OpenAdsController internal constructor() {
                 callback.safeNext()
             }
         }
-        if (asInter) {
-            val unit = cfg.interstitialAdUnitId
-            if (unit.isNullOrBlank()) {
+        if (format == OpenAdFormat.Inter) {
+            val unit = AdsSdk.units.interstitial.ifBlank { cfg.interstitialAdUnitId.orEmpty() }
+            if (unit.isBlank()) {
                 wrapped.onNextAction()
                 return
             }
@@ -44,8 +46,8 @@ class OpenAdsController internal constructor() {
                 reason = InterShowReason.Open,
             )
         } else {
-            val unit = cfg.appOpenAdUnitId
-            if (unit.isNullOrBlank()) {
+            val unit = AdsSdk.units.appOpen.ifBlank { cfg.appOpenAdUnitId.orEmpty() }
+            if (unit.isBlank()) {
                 wrapped.onNextAction()
                 return
             }
@@ -65,6 +67,22 @@ class OpenAdsController internal constructor() {
                 }
             })
         }
+    }
+
+    private fun resolveFormat(): OpenAdFormat {
+        val cfg = AdsSdk.config.openAds
+        val formatKey = cfg.formatRemoteKey
+        if (!formatKey.isNullOrBlank()) {
+            return AdsSdk.remote.openAdFormat(formatKey, cfg.formatDefault)
+        }
+        val showOpen = cfg.enabledRemoteKey?.let {
+            AdsSdk.remoteConfig.getBoolean(it, cfg.enabledDefault)
+        } ?: cfg.enabledDefault
+        if (!showOpen) return OpenAdFormat.Off
+        val asInter = cfg.typeIsInterRemoteKey?.let {
+            AdsSdk.remoteConfig.getBoolean(it, cfg.typeIsInterDefault)
+        } ?: cfg.typeIsInterDefault
+        return if (asInter) OpenAdFormat.Inter else OpenAdFormat.AppOpen
     }
 
     private fun isFirstOpen(context: Context): Boolean {

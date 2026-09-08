@@ -8,6 +8,8 @@ import com.ads.sdk.BottomAdConfig
 import com.ads.sdk.NativeCollapConfig
 import com.ads.sdk.NativeTemplate
 import com.ads.sdk.callback.AdCallback
+import com.ads.sdk.callback.AdError
+import com.ads.sdk.internal.SdkLog
 import com.ads.sdk.nativead.NativeCollapPolicy
 
 class BottomAds internal constructor() {
@@ -29,6 +31,12 @@ class BottomAds internal constructor() {
     ) {
         AdsSdk.banner.destroy(container)
         AdsSdk.native.destroy(container)
+        AdsSdk.mrec.destroy(container)
+        if (AdsSdk.isMax) {
+            SdkLog.w("Bottom native skipped: MAX session — use AdsSdk.mrec")
+            callback?.onAdFailedToLoad(AdError(message = "native bottom is AdMob-only"))
+            return
+        }
         val useCollapsible = config.collapsible &&
             NativeCollapPolicy.shouldUseCollapsible(config.showNativeSmall, config.reloadSec)
         if (useCollapsible) {

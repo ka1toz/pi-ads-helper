@@ -97,6 +97,21 @@ fun AdsNativeCollapsible(
 }
 
 @Composable
+fun AdsMrec(
+    adUnitId: String,
+    modifier: Modifier = Modifier,
+) {
+    val activity = LocalActivity.current as Activity
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { ctx ->
+            FrameLayout(ctx).also { AdsSdk.mrec.load(activity, it, adUnitId) }
+        },
+        onRelease = { AdsSdk.mrec.destroy(it) },
+    )
+}
+
+@Composable
 fun AdsBottom(
     config: BottomAdConfig,
     modifier: Modifier = Modifier,
@@ -111,6 +126,7 @@ fun AdsBottom(
         onRelease = { container: ViewGroup ->
             AdsSdk.banner.destroy(container)
             AdsSdk.native.destroy(container)
+            AdsSdk.mrec.destroy(container)
         },
     )
 }

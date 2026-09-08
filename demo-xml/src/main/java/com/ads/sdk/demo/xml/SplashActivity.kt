@@ -18,8 +18,10 @@ class SplashActivity : AppCompatActivity() {
         val status = findViewById<TextView>(R.id.splashStatus)
         AdsSdk.consent.obtainAndShow(this) {
             status.text = "Consent done — open ads…"
-            AdsSdk.native.preload(applicationContext, "home_collap", TestAdUnits.NATIVE)
-            AdsSdk.native.preload(applicationContext, "home_collap_collapsed", TestAdUnits.NATIVE)
+            if (!AdsSdk.isMax) {
+                AdsSdk.native.preload(applicationContext, "home_collap", AdsSdk.units.native.ifBlank { TestAdUnits.NATIVE })
+                AdsSdk.native.preload(applicationContext, "home_collap_collapsed", AdsSdk.units.native.ifBlank { TestAdUnits.NATIVE })
+            }
             AdsSdk.openAds.showIfEligible(this, object : AdCallback {
                 override fun onNextAction() = goHome()
             })

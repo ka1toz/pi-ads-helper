@@ -13,6 +13,7 @@ import com.ads.sdk.BannerType
 import com.ads.sdk.R
 import com.ads.sdk.callback.AdCallback
 import com.ads.sdk.callback.AdError
+import com.ads.sdk.internal.SdkLog
 import com.ads.sdk.revenue.PaidEventMapper
 import com.google.ads.mediation.admob.AdMobAdapter
 import com.google.android.gms.ads.AdListener
@@ -33,6 +34,19 @@ class BannerAds internal constructor() {
         callback: AdCallback? = null,
     ) {
         destroy(container)
+        if (AdsSdk.isMax) {
+            val bridge = AdsSdk.maxBridge
+            if (bridge == null || config.adUnitId.isBlank()) {
+                SdkLog.w("Banner skipped: MAX backend or unit missing")
+                shimmer?.visibility = View.GONE
+                callback?.onAdFailedToLoad(AdError(message = "max banner unavailable"))
+                return
+            }
+            AdsSdk.ensureNetworkSdk(activity.applicationContext) {
+                bridge.loadBanner(activity, container, shimmer, config, callback)
+            }
+            return
+        }
         AdsSdk.consent.initializeMobileAds(activity.applicationContext)
         shimmer?.visibility = View.VISIBLE
         val adView = AdView(activity)
@@ -71,12 +85,18 @@ class BannerAds internal constructor() {
     }
 
     fun hide(container: ViewGroup) {
+        if (AdsSdk.isMax) {
+            AdsSdk.maxBridge?.hideBanner(container)
+            container.visibility = View.GONE
+            return
+        }
         (container.getTag(R.id.ads_sdk_banner_view) as? AdView)?.visibility = View.GONE
         container.visibility = View.GONE
     }
 
     fun destroy(container: ViewGroup) {
         cancelRefresh(container)
+        AdsSdk.maxBridge?.destroyBanner(container)
         val adView = container.getTag(R.id.ads_sdk_banner_view) as? AdView
         adView?.destroy()
         container.setTag(R.id.ads_sdk_banner_view, null)

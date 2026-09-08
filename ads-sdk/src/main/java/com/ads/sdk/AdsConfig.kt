@@ -37,6 +37,87 @@ enum class ResumeFormat {
     Interstitial,
 }
 
+enum class Mediation {
+    AdMob,
+    Max,
+    ;
+
+    companion object {
+        /** Firebase `mediation_type`: 0 = MAX, anything else (default 1) = AdMob. */
+        fun fromRemote(value: Int): Mediation = if (value == 0) Max else AdMob
+    }
+}
+
+enum class OpenAdFormat {
+    Off,
+    Inter,
+    AppOpen,
+    ;
+
+    companion object {
+        fun parse(raw: String?, default: OpenAdFormat = Off): OpenAdFormat {
+            val value = raw?.trim()?.lowercase().orEmpty()
+            if (value.isEmpty()) return Off
+            return when (value) {
+                "inter", "interstitial" -> Inter
+                "aoa", "appopen", "app_open", "open" -> AppOpen
+                "false", "0", "off", "none" -> Off
+                "true", "1" -> if (default == Off) Inter else default
+                else -> default
+            }
+        }
+    }
+}
+
+data class AdmobAdUnits(
+    val banner: String = "",
+    val native: String = "",
+    val interstitial: String = "",
+    val rewarded: String = "",
+    val appOpen: String = "",
+)
+
+/** MAX catalog — only these four keys. No native / rewarded. */
+data class MaxAdUnits(
+    val interstitial: String = "",
+    val appOpen: String = "",
+    val banner: String = "",
+    val mrec: String = "",
+)
+
+data class ResolvedAdUnits(
+    val interstitial: String = "",
+    val appOpen: String = "",
+    val banner: String = "",
+    val mrec: String = "",
+    val native: String = "",
+    val rewarded: String = "",
+) {
+    companion object {
+        fun resolve(config: AdsConfig, mediation: Mediation): ResolvedAdUnits {
+            if (mediation == Mediation.Max) {
+                val max = config.max
+                return ResolvedAdUnits(
+                    interstitial = max?.interstitial.orEmpty(),
+                    appOpen = max?.appOpen.orEmpty(),
+                    banner = max?.banner.orEmpty(),
+                    mrec = max?.mrec.orEmpty(),
+                )
+            }
+            val admob = config.admob
+            return ResolvedAdUnits(
+                interstitial = admob?.interstitial?.takeIf { it.isNotBlank() }
+                    ?: config.openAds.interstitialAdUnitId.orEmpty(),
+                appOpen = admob?.appOpen?.takeIf { it.isNotBlank() }
+                    ?: config.openAds.appOpenAdUnitId.orEmpty(),
+                banner = admob?.banner.orEmpty(),
+                native = admob?.native.orEmpty(),
+                rewarded = admob?.rewarded.orEmpty(),
+            )
+        }
+    }
+}
+
 enum class RemoteConfigPolicy {
     /** Do not touch Firebase; use numeric/string fields on [AdsConfig]. */
     None,
@@ -69,6 +150,17 @@ data class AdsConfig(
     val remote: RemoteConfigPolicy = RemoteConfigPolicy.None,
     val revenueLogger: RevenueLogger? = null,
     val funnelLogger: FunnelLogger? = null,
+    val admob: AdmobAdUnits? = null,
+    val max: MaxAdUnits? = null,
+    val applovinSdkKey: String? = null,
+    /** Firebase number: 0 = MAX, 1 = AdMob. Default 1. */
+    val mediationRemoteKey: String? = "mediation_type",
+    val mediationDefault: Int = 1,
+    /** Pirago `resume_type` string (`inter` / `aoa` / empty). Null = use [resumeRemoteKey] boolean. */
+    val resumeTypeRemoteKey: String? = null,
+    val resumeTypeDefault: OpenAdFormat = OpenAdFormat.Inter,
+    val resumeAdsIntervalSec: Int = 15,
+    val resumeAdsIntervalRemoteKey: String? = "resume_ads_interval",
 )
 
 data class OpenAdsConfig(
@@ -80,6 +172,9 @@ data class OpenAdsConfig(
     val enabledDefault: Boolean = true,
     val firstOpenDefault: Boolean = true,
     val typeIsInterDefault: Boolean = false,
+    /** Pirago `aoa_type` (`inter` / `aoa` / empty). Null = boolean [enabledRemoteKey] + [typeIsInterRemoteKey]. */
+    val formatRemoteKey: String? = null,
+    val formatDefault: OpenAdFormat = OpenAdFormat.AppOpen,
 )
 
 data class BannerConfig(
@@ -157,7 +252,26 @@ data class PaidAdEvent(
     val adSource: String?,
     val adFormat: String,
     val adUnitId: String,
-)
+) {
+    companion object {
+        fun fromMax(
+            revenueUsd: Double,
+            networkName: String?,
+            adFormat: String,
+            adUnitId: String,
+        ): PaidAdEvent {
+            return PaidAdEvent(
+                valueMicros = (revenueUsd * 1_000_000.0).toLong(),
+                currencyCode = "USD",
+                precision = 0,
+                adPlatform = "AppLovin",
+                adSource = networkName,
+                adFormat = adFormat,
+                adUnitId = adUnitId,
+            )
+        }
+    }
+}
 
 open class SimpleAdCallback : AdCallback {
     override fun onNextAction() = Unit

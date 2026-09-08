@@ -8,8 +8,8 @@ plugins {
 
 tasks.register("publishAdsSdk") {
     group = "publishing"
-    description = "Publish :ads-sdk and :ads-sdk-compose to mavenLocal + build/maven-repo"
-    dependsOn(":ads-sdk:publish", ":ads-sdk-compose:publish")
+    description = "Publish :ads-sdk, :ads-sdk-compose, and :ads-sdk-max to mavenLocal + build/maven-repo"
+    dependsOn(":ads-sdk:publish", ":ads-sdk-compose:publish", ":ads-sdk-max:publish")
     doLast {
         // GitHub Pages + Jekyll would skip some paths without this file.
         rootProject.layout.buildDirectory.file("maven-repo/.nojekyll").get().asFile.writeText("")
@@ -19,5 +19,5 @@ tasks.register("publishAdsSdk") {
 tasks.register("exportAdsSdkAar") {
     group = "publishing"
     description = "Copy release AARs into build/dist/"
-    dependsOn(":ads-sdk:exportAar", ":ads-sdk-compose:exportAar")
+    dependsOn(":ads-sdk:exportAar", ":ads-sdk-compose:exportAar", ":ads-sdk-max:exportAar")
 }

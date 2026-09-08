@@ -5,6 +5,7 @@ import com.ads.sdk.AdsSdk
 import com.ads.sdk.FunnelEvent
 import com.ads.sdk.callback.AdCallback
 import com.ads.sdk.callback.AdError
+import com.ads.sdk.internal.SdkLog
 import com.ads.sdk.revenue.PaidEventMapper
 import com.ads.sdk.safeNext
 import com.google.android.gms.ads.AdRequest
@@ -21,6 +22,11 @@ class RewardedAds internal constructor() {
     fun isReady(): Boolean = loaded != null
 
     fun load(activity: Activity, adUnitId: String, callback: AdCallback? = null) {
+        if (AdsSdk.isMax) {
+            SdkLog.w("Rewarded skipped: MAX session has no rewarded unit")
+            callback?.onAdFailedToLoad(AdError(message = "rewarded is AdMob-only"))
+            return
+        }
         AdsSdk.consent.initializeMobileAds(activity.applicationContext)
         RewardedAd.load(
             activity,
@@ -47,6 +53,11 @@ class RewardedAds internal constructor() {
     }
 
     fun show(activity: Activity, callback: AdCallback) {
+        if (AdsSdk.isMax) {
+            callback.onAdFailedToLoad(AdError(message = "rewarded is AdMob-only"))
+            callback.safeNext()
+            return
+        }
         AdsSdk.funnel(FunnelEvent.RewardedEligible)
         val ad = loaded
         if (ad == null) {

@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnInter).setOnClickListener {
             AdsSdk.interstitial.loadAndShow(
                 this,
-                TestAdUnits.INTERSTITIAL,
+                AdsSdk.units.interstitial.ifBlank { TestAdUnits.INTERSTITIAL },
                 ignoreInterval = false,
                 callback = logCallback(status, "inter"),
             )
@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnInterForce).setOnClickListener {
             AdsSdk.interstitial.loadAndShow(
                 this,
-                TestAdUnits.INTERSTITIAL,
+                AdsSdk.units.interstitial.ifBlank { TestAdUnits.INTERSTITIAL },
                 ignoreInterval = true,
                 callback = logCallback(status, "inter-force"),
             )
