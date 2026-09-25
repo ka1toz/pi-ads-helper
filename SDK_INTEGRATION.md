@@ -592,3 +592,5 @@ AAR đã kèm `consumer-rules.pro`. Không copy rule trừ khi minify vẫn stri
 - Dùng AppLovin với app kids hoặc user là trẻ em
 - Gán `resume_type` vào `resumeRemoteKey`, hoặc `aoa_type` vào `enabledRemoteKey` / `typeIsInterRemoteKey`
 - Mở Ad Inspector trên bản product, hoặc tự gọi `openAdInspector` khi load fail / lúc splash
+
+Last edit: 2026/09/25 14:07.
