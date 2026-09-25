@@ -23,6 +23,8 @@ import com.ads.sdk.openads.OpenAdsController
 import com.ads.sdk.remote.AdsRemoteConfig
 import com.ads.sdk.rewarded.RewardedAds
 import com.ads.sdk.splash.SplashAds
+import com.google.android.gms.ads.AdInspectorError
+import com.google.android.gms.ads.MobileAds
 
 object AdsSdk {
     @Volatile
@@ -91,6 +93,9 @@ object AdsSdk {
 
     val isMax: Boolean get() = _mediation == Mediation.Max
 
+    /** True only when the host passed [AdsConfig.isDebuggableAds] at init. */
+    val isDebuggableAds: Boolean get() = configOrNull?.isDebuggableAds == true
+
     val mediation: Mediation get() = _mediation
 
     val units: ResolvedAdUnits get() = _units
@@ -115,6 +120,38 @@ object AdsSdk {
                     "interval=${remote.interstitialIntervalSec()}s",
             )
             onReady?.invoke()
+        }
+    }
+
+    /**
+     * Opens a debug screen for the active mediation.
+     * AdMob: Ad Inspector. MAX: Mediation Debugger.
+     * No-op unless [AdsConfig.isDebuggableAds] is true.
+     * Call after a failing load so the request log already contains that attempt.
+     * [onClosed] runs only for Ad Inspector; null means it closed normally.
+     * Mediation Debugger has no close callback.
+     */
+    fun openAdInspector(activity: Activity, onClosed: ((AdInspectorError?) -> Unit)? = null) {
+        if (!isDebuggableAds) {
+            SdkLog.w("Ad Inspector skipped: isDebuggableAds is false")
+            return
+        }
+        ensureNetworkSdk(activity) {
+            if (isMax) {
+                val bridge = maxBridge
+                if (bridge == null || !maxStarted) {
+                    SdkLog.w("Mediation Debugger skipped: MAX is not initialized")
+                    return@ensureNetworkSdk
+                }
+                bridge.showMediationDebugger(activity)
+                return@ensureNetworkSdk
+            }
+            MobileAds.openAdInspector(activity) { error ->
+                if (error != null) {
+                    SdkLog.w("Ad Inspector error ${error.code}: ${error.message}")
+                }
+                onClosed?.invoke(error)
+            }
         }
     }
 

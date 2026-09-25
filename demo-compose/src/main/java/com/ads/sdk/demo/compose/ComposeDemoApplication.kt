@@ -18,6 +18,7 @@ class ComposeDemoApplication : Application() {
             this,
             AdsConfig(
                 debug = true,
+                isDebuggableAds = true,
                 interstitialIntervalSec = 15,
                 enableResumeAds = true,
                 resumeAdUnitId = TestAdUnits.APP_OPEN,

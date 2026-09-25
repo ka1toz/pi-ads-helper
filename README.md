@@ -2,7 +2,11 @@
 
 Android library in this repo: **`:ads-sdk`**. Optional Compose: **`:ads-sdk-compose`**. Optional AppLovin MAX: **`:ads-sdk-max`**. Samples: **`:demo-xml`**, **`:demo-compose`** (GMA only). The original JBase AAR demo remains in **`:app`**.
 
-Current version: **1.0.3**. Artifact `sdk` is GMA-owned (no AppLovin on the classpath). Add `sdk-max` only if the app supports Firebase `mediation_type = 0`. No UnityPlayer, no JBase AAR wrap.
+Current version: **1.0.4**. Artifact `sdk` is GMA-owned (no AppLovin on the classpath). Add `sdk-max` only if the app supports Firebase `mediation_type = 0`. No UnityPlayer, no JBase AAR wrap.
+
+### 1.0.4
+
+- Thêm `AdsSdk.openAdInspector`. AdMob mở Ad Inspector; MAX mở Mediation Debugger. Chỉ khi `AdsConfig.isDebuggableAds` là true. Product để false thì no-op.
 
 **App đích (Koin):** copy [SDK_INTEGRATION.md](SDK_INTEGRATION.md) vào chat AI của repo app — Gradle Pages, dual-engine, Haircut RC keys, XML/Compose, native custom.
 
@@ -252,13 +256,13 @@ Không fetch hai lần (SDK `FetchAndRead` + Splash `fetchAndActivate`) trừ kh
 
 ## Publish (AAR / Maven)
 
-Ba artifact (`adsSdk.version` hiện **1.0.3**):
+Ba artifact (`adsSdk.version` hiện **1.0.4**):
 
 | Module | Maven |
 |---|---|
-| `:ads-sdk` | `com.pirago.ads-helper:sdk:1.0.3` |
-| `:ads-sdk-compose` | `com.pirago.ads-helper:sdk-compose:1.0.3` |
-| `:ads-sdk-max` | `com.pirago.ads-helper:sdk-max:1.0.3` |
+| `:ads-sdk` | `com.pirago.ads-helper:sdk:1.0.4` |
+| `:ads-sdk-compose` | `com.pirago.ads-helper:sdk-compose:1.0.4` |
+| `:ads-sdk-max` | `com.pirago.ads-helper:sdk-max:1.0.4` |
 
 Đổi `adsSdk.group` / `adsSdk.version` trong `gradle.properties`. **Nên publish Maven (kèm POM)** chứ đừng chỉ copy file `.aar` — POM kéo theo GMA, UMP, Firebase Config (`sdk-max` kéo AppLovin). File AAR một mình sẽ thiếu dependency.
 
@@ -268,7 +272,7 @@ Ba artifact (`adsSdk.version` hiện **1.0.3**):
 ./gradlew exportAdsSdkAar
 ```
 
-File nằm ở `build/dist/sdk-1.0.3.aar`, `sdk-compose-1.0.3.aar`, `sdk-max-1.0.3.aar`. App nhận AAR `sdk` phải tự thêm:
+File nằm ở `build/dist/sdk-1.0.4.aar`, `sdk-compose-1.0.4.aar`, `sdk-max-1.0.4.aar`. App nhận AAR `sdk` phải tự thêm:
 
 ```kotlin
 implementation("com.google.android.gms:play-services-ads:23.6.0")
@@ -291,9 +295,9 @@ App khác:
 ```kotlin
 repositories { mavenLocal() }
 dependencies {
-    implementation("com.pirago.ads-helper:sdk:1.0.3")
-    implementation("com.pirago.ads-helper:sdk-compose:1.0.3") // optional
-    implementation("com.pirago.ads-helper:sdk-max:1.0.3")     // optional MAX
+    implementation("com.pirago.ads-helper:sdk:1.0.4")
+    implementation("com.pirago.ads-helper:sdk-compose:1.0.4") // optional
+    implementation("com.pirago.ads-helper:sdk-max:1.0.4")     // optional MAX
 }
 ```
 
@@ -321,9 +325,9 @@ repositories {
     maven { url = uri("https://ka1toz.github.io/pi-ads-helper/") }
 }
 dependencies {
-    implementation("com.pirago.ads-helper:sdk:1.0.3")
-    implementation("com.pirago.ads-helper:sdk-compose:1.0.3") // optional
-    implementation("com.pirago.ads-helper:sdk-max:1.0.3")     // optional MAX
+    implementation("com.pirago.ads-helper:sdk:1.0.4")
+    implementation("com.pirago.ads-helper:sdk-compose:1.0.4") // optional
+    implementation("com.pirago.ads-helper:sdk-max:1.0.4")     // optional MAX
 }
 ```
 
@@ -382,7 +386,7 @@ Demo (không bắt buộc khi release):
 ./gradlew :demo-xml:assembleDebug :demo-compose:assembleDebug
 ```
 
-### Release version mới (ví dụ `1.0.3`)
+### Release version mới (ví dụ `1.0.4`)
 
 Thay `VERSION` bằng số semver **chưa từng publish**. Patch = fix; minor = API mới tương thích; major = breaking. **Không** ghi đè folder version cũ trên `gh-pages` (giữ `1.0.2/`).
 
@@ -390,7 +394,7 @@ Thay `VERSION` bằng số semver **chưa từng publish**. Patch = fix; minor =
 2. Chạy test + publish:
 
 ```bash
-VERSION=1.0.3   # đổi số này
+VERSION=1.0.4   # đổi số này
 ./gradlew :ads-sdk:test
 ./gradlew publishAdsSdk -PadsSdk.version="$VERSION"
 ```
@@ -398,7 +402,7 @@ VERSION=1.0.3   # đổi số này
 3. Merge vào nhánh `gh-pages` (**giữ** thư mục version cũ). Dùng clone tạm, không `git checkout gh-pages` trong source tree:
 
 ```bash
-VERSION=1.0.3
+VERSION=1.0.4
 MAVEN_DIR=/tmp/pi-ads-helper-maven
 rm -rf "$MAVEN_DIR"
 git clone --branch gh-pages --single-branch git@github.com:ka1toz/pi-ads-helper.git "$MAVEN_DIR"
@@ -415,7 +419,7 @@ Nếu clone `gh-pages` thất bại (chưa có nhánh): lần đầu tạo orpha
 4. Commit source (version trong `gradle.properties`) + tag, đẩy GitHub:
 
 ```bash
-VERSION=1.0.3
+VERSION=1.0.4
 git add gradle.properties README.md
 git commit -m "Release ads-helper $VERSION"
 git tag "v$VERSION"

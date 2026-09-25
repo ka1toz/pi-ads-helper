@@ -31,6 +31,7 @@ sealed interface HomeIntent {
     data object ShowInterForce : HomeIntent
     data object ShowRewarded : HomeIntent
     data object ToggleResume : HomeIntent
+    data object OpenAdInspector : HomeIntent
 }
 
 /** One-shot commands that need Activity. ViewModel never holds Activity. */
@@ -43,11 +44,14 @@ sealed interface HomeEffect {
     data class ShowRewarded(val adUnitId: String) : HomeEffect
 
     data class SetResumeEnabled(val enabled: Boolean) : HomeEffect
+
+    data object OpenAdInspector : HomeEffect
 }
 
 data class HomeUiState(
     val status: String = "Ready",
     val resumeEnabled: Boolean = true,
+    val showAdInspector: Boolean = false,
     val showHomeBottom: Boolean = true,
     val showNative: Boolean = true,
     val showPirago: Boolean = true,
@@ -103,6 +107,12 @@ fun HomeUi(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(if (state.resumeEnabled) "Disable resume ads" else "Enable resume ads")
+        }
+        if (state.showAdInspector) {
+            Button(
+                onClick = { onIntent(HomeIntent.OpenAdInspector) },
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Open Ad Inspector") }
         }
         if (state.showHomeBottom) {
             Text("Home bottom (Pirago medium ↔ small)", style = MaterialTheme.typography.titleMedium)

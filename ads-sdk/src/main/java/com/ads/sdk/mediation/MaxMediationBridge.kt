@@ -52,4 +52,7 @@ interface MaxMediationBridge {
     fun isAppOpenReady(): Boolean
 
     fun showAppOpen(activity: Activity, callback: AdCallback)
+
+    /** Opens the MAX Mediation Debugger. Call only after [initialize] completes. */
+    fun showMediationDebugger(activity: Activity)
 }

@@ -45,6 +45,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 showNative = rc.getBoolean("is_show_native_medium", true),
                 showPirago = rc.getBoolean("is_show_native_pirago", true),
                 homeBottom = homeBottom,
+                showAdInspector = AdsSdk.isDebuggableAds,
             )
         }
         if (!AdsSdk.isMax) {
@@ -66,6 +67,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 viewModelScope.launch {
                     _effects.send(HomeEffect.SetResumeEnabled(enabled))
                 }
+            }
+            HomeIntent.OpenAdInspector -> viewModelScope.launch {
+                _effects.send(HomeEffect.OpenAdInspector)
             }
         }
     }

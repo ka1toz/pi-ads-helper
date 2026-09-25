@@ -135,6 +135,11 @@ enum class InterShowReason {
 
 data class AdsConfig(
     val debug: Boolean = false,
+    /**
+     * Host build flag. Pass a Gradle/BuildConfig boolean: true on dev, false on product.
+     * [AdsSdk.openAdInspector] opens only when this is true.
+     */
+    val isDebuggableAds: Boolean = false,
     /** When true, UMP debug geography is EEA. Default false — EEA + old emulator GMS often breaks native test ads. */
     val debugConsentEea: Boolean = false,
     val testDeviceIds: List<String> = emptyList(),

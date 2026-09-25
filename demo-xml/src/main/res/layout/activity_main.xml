@@ -51,6 +51,13 @@
             android:layout_height="wrap_content"
             android:text="Disable resume ads" />
 
+        <Button
+            android:id="@+id/btnAdInspector"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Open Ad Inspector"
+            android:visibility="gone" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

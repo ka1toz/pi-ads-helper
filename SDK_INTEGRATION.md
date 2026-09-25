@@ -10,7 +10,9 @@ File này dành cho **AI (hoặc người) đang làm việc trong repo app đí
 | `sdk-compose` | `AndroidView` helpers | Chỉ khi app Compose |
 | `sdk-max` | Cầu MAX (`AppLovinSdk`) | Chỉ khi app hỗ trợ `mediation_type = 0` |
 
-Contract file này = **1.0.3** (`sdk` + `sdk-compose` + `sdk-max`). `gradle.properties` trên source đã là 1.0.3. Pages **1.0.2** vẫn GMA-only cho đến khi metadata `sdk` / `sdk-max` hiện 1.0.3 — kiểm tra URL dưới đây trước khi sync app.
+Contract file này = **1.0.4** (`sdk` + `sdk-compose` + `sdk-max`). `gradle.properties` trên source đã là 1.0.4. Kiểm tra metadata Pages có 1.0.4 trước khi sync app.
+
+**1.0.4:** thêm `AdsSdk.openAdInspector`, cổng `AdsConfig.isDebuggableAds` (dev true, product false). AdMob mở Ad Inspector; MAX mở Mediation Debugger. Xem mục 5.3.
 
 ## 0. Trước khi sửa code
 
@@ -21,7 +23,7 @@ Contract file này = **1.0.3** (`sdk` + `sdk-compose` + `sdk-max`). `gradle.prop
    - Ad unit **AdMob**: banner, native, interstitial, rewarded, app open
    - AppLovin **SDK Key** (nếu app hỗ trợ MAX)
    - Ad unit **MAX** (đúng 4): Inter, AOA, Banner, MREC — không bịa native/rewarded MAX
-   - Version đã publish (mặc định dưới đây: **1.0.3**; kiểm tra metadata Pages trước khi sync)
+   - Version đã publish (mặc định dưới đây: **1.0.4**; kiểm tra metadata Pages trước khi sync)
 4. `minSdk` app ≥ **24**.
 5. App kids / user là trẻ em: **không** init MAX (AppLovin cấm). Haircut-like = audience chung thì OK.
 6. Họ Remote Config: **Pirago/Haircut** (chuỗi `aoa_type` / `resume_type`) **khác** Led Banner (boolean `show_open_ads` / `show_resum_ads`). Gán đúng field `AdsConfig` — xem mục 5. **Không** gán chuỗi `resume_type` vào `resumeRemoteKey` (field đó là boolean).
@@ -103,11 +105,11 @@ Chỉ thêm Maven mạng khi app **thật sự** khai adapter đó. Không copy 
 
 ```kotlin
 dependencies {
-    implementation("com.pirago.ads-helper:sdk:1.0.3")
+    implementation("com.pirago.ads-helper:sdk:1.0.4")
     // Compose:
-    implementation("com.pirago.ads-helper:sdk-compose:1.0.3")
+    implementation("com.pirago.ads-helper:sdk-compose:1.0.4")
     // Bắt buộc nếu app hỗ trợ mediation_type = 0:
-    implementation("com.pirago.ads-helper:sdk-max:1.0.3")
+    implementation("com.pirago.ads-helper:sdk-max:1.0.4")
 
     // AdMob Mediation adapters — app tự thêm, dùng khi session = 1
     // implementation("com.google.ads.mediation:facebook:…")
@@ -128,6 +130,22 @@ và (khi dùng MAX):
 `https://ka1toz.github.io/pi-ads-helper/com/pirago/ads-helper/sdk-max/maven-metadata.xml`
 
 Không copy file `.aar` vào `libs/` trừ khi người dùng yêu cầu. **Không** bọc AAR JBase (`maxads-release.aar`, `UnityPlayer`).
+
+Cùng module app, thêm flag build cho Ad Inspector. Dev = `true`, product = `false`. Đặt trên **build type** hoặc **flavor** tùy app đang tách môi trường thế nào — không hard-code `true` trong `release` / product.
+
+```kotlin
+android {
+    buildFeatures { buildConfig = true }
+    buildTypes {
+        getByName("debug") {
+            buildConfigField("boolean", "IS_DEBUGGABLE_ADS", "true")
+        }
+        getByName("release") {
+            buildConfigField("boolean", "IS_DEBUGGABLE_ADS", "false")
+        }
+    }
+}
+```
 
 ## 3. Manifest — AdMob App ID + MAX SDK Key
 
@@ -221,6 +239,7 @@ class App : Application() {
             this,
             AdsConfig(
                 debug = BuildConfig.DEBUG,
+                isDebuggableAds = BuildConfig.IS_DEBUGGABLE_ADS,
                 debugConsentEea = false,
                 interstitialIntervalSec = 10,
                 interstitialIntervalRemoteKey = "ads_interval",
@@ -264,6 +283,31 @@ Ghi `Application` này trong manifest (`android:name`).
 `AdsConfig.resumeAdUnitId` và `OpenAdsConfig.*AdUnitId` **phải** gán ID app — default SDK là test Google. Catalog `admob` / `max` là nguồn `AdsSdk.units` sau khi RC chọn engine.
 
 App **không** hỗ trợ MAX: bỏ `sdk-max`, bỏ `max = MaxAdUnits(...)`, `mediation_type` sẽ luôn về AdMob (default `1`). Vẫn truyền `admob = AdmobAdUnits(...)`.
+
+### 5.3 Ad Inspector / Mediation Debugger (chỉ bản dev)
+
+`AdsConfig.isDebuggableAds` là flag build của app (mục 2), không phải Remote Config. `AdsSdk.openAdInspector` chỉ mở khi flag đó là `true`. Product (`false`) thì no-op.
+
+Cùng một lời gọi, SDK chọn màn theo session:
+
+- AdMob: Ad Inspector (`MobileAds.openAdInspector`). Có callback đóng.
+- MAX: Mediation Debugger (`AppLovinSdk.showMediationDebugger`), sau khi MAX init xong. Không có callback đóng. Cần `sdk-max` trên classpath; thiếu thì no-op.
+
+Gọi tay từ `Activity` đang foreground, sau khi đã load placement đang No Fill, để log request có bản ghi đó. Không gọi lúc splash, không gọi trong `onAdFailedToLoad`.
+
+Nút hoặc cử chỉ chỉ hiện khi `AdsSdk.isDebuggableAds`. Bản product không có lối vào. App không gọi `showMediationDebugger` trực tiếp.
+
+```kotlin
+if (AdsSdk.isDebuggableAds) {
+    AdsSdk.openAdInspector(activity) { error ->
+        // AdMob: error == null khi đóng bình thường. MAX: callback không chạy.
+    }
+}
+```
+
+Ad Inspector cho biết request nào No Fill, message, và adapter mediation Ready hay không. Single ad source test lưu trên máy cho đến khi tắt trong Inspector — tắt nếu máy test đang kẹt một network (ví dụ Meta) và không waterfall.
+
+Mediation Debugger cho biết adapter MAX Ready hay thiếu, và waterfall của ad unit Inter, AOA, Banner, MREC. Nó không có nhật ký từng request No Fill như Ad Inspector.
 
 ### Thứ tự bắt buộc (Splash)
 
@@ -521,7 +565,7 @@ AAR đã kèm `consumer-rules.pro`. Không copy rule trừ khi minify vẫn stri
 ## 12. Checklist AI phải verify
 
 - [ ] `maven { url = uri("https://ka1toz.github.io/pi-ads-helper/") }` trong settings
-- [ ] `implementation("com.pirago.ads-helper:sdk:1.0.3")` (và `sdk-compose` nếu Compose; `sdk-max` nếu hỗ trợ MAX) — chỉ sau khi metadata Pages có 1.0.3
+- [ ] `implementation("com.pirago.ads-helper:sdk:1.0.4")` (và `sdk-compose` nếu Compose; `sdk-max` nếu hỗ trợ MAX) — chỉ sau khi metadata Pages có 1.0.4
 - [ ] `APPLICATION_ID` trên manifest; `applovin.sdk.key` nếu có MAX
 - [ ] Hai catalog ID (AdMob + đúng 4 MAX). Không bịa native/rewarded MAX. Truyền `admob` / `max` lúc `AdsSdk.init`
 - [ ] Haircut: `formatRemoteKey = "aoa_type"`, `resumeTypeRemoteKey = "resume_type"` — **không** gán các chuỗi đó vào field boolean
@@ -531,6 +575,7 @@ AAR đã kèm `consumer-rules.pro`. Không copy rule trừ khi minify vẫn stri
 - [ ] Slot in-layout: AdMob = native/banner; MAX = MREC/banner; Compose không giữ View trong ViewModel
 - [ ] Không `TestAdUnits` trên flavor release
 - [ ] Resume disable trên Splash: `AdsSdk.appOpen.disableResumeWith(SplashActivity::class.java)`
+- [ ] `IS_DEBUGGABLE_ADS`: dev `true`, product `false`. Truyền `AdsConfig.isDebuggableAds`. Nút Ad Inspector chỉ khi `AdsSdk.isDebuggableAds`; không gọi lúc splash / mỗi lần fail
 
 ## Việc AI không được làm
 
@@ -546,3 +591,4 @@ AAR đã kèm `consumer-rules.pro`. Không copy rule trừ khi minify vẫn stri
 - Bọc AAR JBase / `UnityPlayer` / reflection `MaxAdsService`
 - Dùng AppLovin với app kids hoặc user là trẻ em
 - Gán `resume_type` vào `resumeRemoteKey`, hoặc `aoa_type` vào `enabledRemoteKey` / `typeIsInterRemoteKey`
+- Mở Ad Inspector trên bản product, hoặc tự gọi `openAdInspector` khi load fail / lúc splash

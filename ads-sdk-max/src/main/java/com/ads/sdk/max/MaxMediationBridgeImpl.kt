@@ -65,6 +65,12 @@ class MaxMediationBridgeImpl : MaxMediationBridge {
         }
     }
 
+    override fun showMediationDebugger(activity: Activity) {
+        handler.post {
+            AppLovinSdk.getInstance(activity).showMediationDebugger()
+        }
+    }
+
     override fun loadBanner(
         activity: Activity,
         container: ViewGroup,

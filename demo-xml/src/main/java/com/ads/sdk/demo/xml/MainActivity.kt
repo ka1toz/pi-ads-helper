@@ -1,6 +1,7 @@
 package com.ads.sdk.demo.xml
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -89,6 +90,19 @@ class MainActivity : AppCompatActivity() {
             resumeEnabled = !resumeEnabled
             if (resumeEnabled) AdsSdk.appOpen.enableResume() else AdsSdk.appOpen.disableResume()
             toggle.text = if (resumeEnabled) "Disable resume ads" else "Enable resume ads"
+        }
+        val inspector = findViewById<Button>(R.id.btnAdInspector)
+        if (AdsSdk.isDebuggableAds) {
+            inspector.visibility = View.VISIBLE
+            inspector.setOnClickListener {
+                AdsSdk.openAdInspector(this) { error ->
+                    status.text = if (error == null) {
+                        "Ad Inspector closed"
+                    } else {
+                        "Ad Inspector: ${error.message}"
+                    }
+                }
+            }
         }
     }
 

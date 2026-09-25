@@ -11,13 +11,15 @@ Tài liệu này là **plan + lịch sử v1**. Hợp đồng app đích hiện 
 
 Maven: `com.pirago.ads-helper` — Pages `https://ka1toz.github.io/pi-ads-helper/`. **Không** dùng `com.yourorg.ads`.
 
-| Artifact | Module | 1.0.2 (Pages) | 1.0.3 (source hiện tại) |
+| Artifact | Module | 1.0.2 (Pages) | 1.0.4 (source hiện tại) |
 |---|---|---|---|
-| `sdk` | `:ads-sdk` | GMA public API | + `AdsSdk.units` / `isMax` / `mrec` |
+| `sdk` | `:ads-sdk` | GMA public API | + `AdsSdk.units` / `isMax` / `mrec` + `openAdInspector` |
 | `sdk-compose` | `:ads-sdk-compose` | `AndroidView` | + `AdsMrec` |
 | `sdk-max` | `:ads-sdk-max` | **Không có** | Optional MAX (pin AppLovin). App thêm nếu hỗ trợ `mediation_type = 0` |
 
-**Đã chốt, đã code, version `1.0.3` trên source.** Public Pages khi `publishAdsSdk` + rsync `gh-pages` (**giữ** 1.0.2).
+**Đã chốt, đã code, version `1.0.4` trên source.** Public Pages khi `publishAdsSdk` + rsync `gh-pages` (**giữ** version cũ).
+
+**1.0.4:** `AdsSdk.openAdInspector`. AdMob = Ad Inspector. MAX = Mediation Debugger (`MaxMediationBridge.showMediationDebugger`). Cổng `AdsConfig.isDebuggableAds`.
 
 - Dual-engine **trong APK**. Firebase `mediation_type`: `0` = MAX, `1` = AdMob Mediation, default **1**.
 - Một mediator / session. Đổi RC chỉ có hiệu lực cold start sau.
@@ -28,7 +30,7 @@ Maven: `com.pirago.ads-helper` — Pages `https://ka1toz.github.io/pi-ads-helper
 - Kids/Families: không init MAX.
 - Demo `:demo-xml` / `:demo-compose` **không** depend `:ads-sdk-max` (ở lại GMA).
 
-Phase 0–4 (GMA ViewGroup, UMP, native collap, publish 1.0.2) **đã xong**. Phase 5 MAX module **đã code**, version source **1.0.3**; Pages còn 1.0.2 cho đến khi rsync `gh-pages`.
+Phase 0–4 (GMA ViewGroup, UMP, native collap, publish 1.0.2) **đã xong**. Phase 5 MAX module **đã code** (1.0.3). Source hiện tại **1.0.4** (`openAdInspector`). Pages còn version cũ cho đến khi rsync `gh-pages`.
 
 ---
 
@@ -81,6 +83,7 @@ Chia 3 tầng: **SDK bắt buộc**, **SDK nên có**, **app (không nhét vào 
 | Init | Init SDK trong `Application` | `AdsSdk.init(application, AdsConfig)` | Không cần UI |
 | Init | AdMob App ID | Manifest `<meta-data APPLICATION_ID>` — app tự khai | Library không hard-code |
 | Init | Test device IDs + debug | `AdsConfig.testDeviceIds`, `debug` | |
+| Init | Ad Inspector / MAX debugger (dev only) | `AdsConfig.isDebuggableAds` + `AdsSdk.openAdInspector(activity)` | AdMob = Ad Inspector. MAX = `showMediationDebugger` qua `sdk-max`. Product = `false` → no-op. Không tự mở khi fail |
 | Init | Lifecycle Activity | `ActivityLifecycleCallbacks` nội bộ | Cần Activity cho fullscreen; Compose `ComponentActivity` OK |
 | Init | Remote Config (SDK knobs) | `AdsConfig.remote` — xem §2.4 | Không UI; Compose/XML như nhau |
 | Consent | UMP gather + form | `Consent.obtainAndShow(activity) { }` | Fullscreen UMP; XML/Compose như nhau |
@@ -350,6 +353,8 @@ Publish: `com.pirago.ads-helper:sdk` + `sdk-compose` + `sdk-max`. `./gradlew pub
 object AdsSdk {
     fun init(application: Application, config: AdsConfig)
     val isMax: Boolean
+    val isDebuggableAds: Boolean
+    fun openAdInspector(activity: Activity, onClosed: ((AdInspectorError?) -> Unit)? = null)
     val units: ResolvedAdUnits
     val consent: ConsentController
     val interstitial: InterstitialAds
@@ -363,6 +368,7 @@ object AdsSdk {
 
 data class AdsConfig(
     val debug: Boolean = false,
+    val isDebuggableAds: Boolean = false,   // Gradle/BuildConfig: dev true, product false
     val interstitialIntervalSec: Int = 15,
     val interstitialIntervalRemoteKey: String? = "interval_show_interstitial", // Haircut: "ads_interval"
     val enableResumeAds: Boolean = true,
@@ -510,6 +516,11 @@ Giữ từ VTN: Application init, UMP, splash timeout, `onNextAction`, native bi
 - [x] `onNextAction` không kẹt navigation.
 - [x] Consumer ProGuard.
 - [x] Native Themie alias + collap `layoutRes`.
+
+### 1.0.4
+
+- [x] `AdsSdk.openAdInspector` + `AdsConfig.isDebuggableAds`. MAX: `showMediationDebugger` trên `MaxMediationBridge`.
+- [x] `adsSdk.version=1.0.4`.
 
 ### 1.0.3 — source sẵn; Pages khi rsync
 

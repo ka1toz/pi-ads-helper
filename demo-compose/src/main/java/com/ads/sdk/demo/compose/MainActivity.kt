@@ -86,6 +86,11 @@ private fun handleAdEffect(activity: Activity, effect: HomeEffect, viewModel: Ho
         is HomeEffect.SetResumeEnabled -> {
             if (effect.enabled) AdsSdk.appOpen.enableResume() else AdsSdk.appOpen.disableResume()
         }
+        HomeEffect.OpenAdInspector -> AdsSdk.openAdInspector(activity) { error ->
+            viewModel.onAdResult(
+                if (error == null) "Ad Inspector closed" else "Ad Inspector: ${error.message}",
+            )
+        }
     }
 }
 
