@@ -1,0 +1,124 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.pirago.ads-helper",
+    "module": "sdk-max",
+    "version": "1.0.7",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.4.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "com.pirago.ads-helper",
+          "module": "sdk",
+          "version": {
+            "requires": "1.0.7"
+          }
+        },
+        {
+          "group": "com.applovin",
+          "module": "applovin-sdk",
+          "version": {
+            "requires": "13.3.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "sdk-max-1.0.7.aar",
+          "url": "sdk-max-1.0.7.aar",
+          "size": 20680,
+          "sha512": "52cccdd5e709c576f25a7d8fa6ea46b4dd9dad282d843af85de0142a1e5deecdbf4061cf624d40a8729331807e9adf3f4645a046448950e2c9e863e1728b55ee",
+          "sha256": "7d23246677394e3ae8e12123e32f333d7daca8f73ce0d3b2c88360ae254b0aff",
+          "sha1": "5d59ed1415e05f70d705bad2360a83b309a5db1c",
+          "md5": "468b7e6798e8e31bfdb735d00ac29e82"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "com.pirago.ads-helper",
+          "module": "sdk",
+          "version": {
+            "requires": "1.0.7"
+          }
+        },
+        {
+          "group": "com.applovin",
+          "module": "applovin-sdk",
+          "version": {
+            "requires": "13.3.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "sdk-max-1.0.7.aar",
+          "url": "sdk-max-1.0.7.aar",
+          "size": 20680,
+          "sha512": "52cccdd5e709c576f25a7d8fa6ea46b4dd9dad282d843af85de0142a1e5deecdbf4061cf624d40a8729331807e9adf3f4645a046448950e2c9e863e1728b55ee",
+          "sha256": "7d23246677394e3ae8e12123e32f333d7daca8f73ce0d3b2c88360ae254b0aff",
+          "sha1": "5d59ed1415e05f70d705bad2360a83b309a5db1c",
+          "md5": "468b7e6798e8e31bfdb735d00ac29e82"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "sdk-max-1.0.7-sources.jar",
+          "url": "sdk-max-1.0.7-sources.jar",
+          "size": 4363,
+          "sha512": "50eaab55f6d9400794323fc56710252bc61fad06b65250ba1ab3b71ddbeea5ae269baf1801a1a5250029be14e95b43e8842b208b1a8e3b86b041fc164bc59b91",
+          "sha256": "ee6b23e2d1bfdcb1b31e686a50a4ce830ef7f95d0cb77f0b7d26ed62a28e00b7",
+          "sha1": "a3c4b74f633770acf898481064ba4b154304592d",
+          "md5": "094bd6e719d543d9aef53cf1acde2082"
+        }
+      ]
+    }
+  ]
+}
